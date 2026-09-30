@@ -126,37 +126,50 @@ GitHub Pages 只能放静态网页，所以统计交给 [GoatCounter](https://ww
 
 ## 第一次上线（只需要做一次）
 
-最简单的办法是用 **GitHub Desktop**（免费的图形界面工具，不用敲命令）：
+不用装任何客户端：GitHub 网页上建仓库，本地用系统自带的 git 推送。
+这台电脑上已经配好了：推送用的 SSH 密钥在 `~/.ssh/github_wwbosell`（只给这个项目用），仓库地址 `git@github.com:wwbosell/wwbosell.github.io.git`。
 
-1. 下载安装 [GitHub Desktop](https://desktop.github.com)，打开后用 GitHub 账号 **wwbosell** 登录
-2. 菜单 **File → Add Local Repository…**，选桌面上的 `web` 文件夹 → Add Repository
-3. 点上方的 **Publish repository**：
-   - Name 填 **`wwbosell.github.io`**（必须一字不差）
-   - **取消勾选** “Keep this code private”（免费账号的 GitHub Pages 需要公开仓库）
-   - 点 Publish Repository
-4. 浏览器打开 https://github.com/wwbosell/wwbosell.github.io → **Settings → Pages** → Build and deployment 的 **Source 选 “GitHub Actions”**
-5. 打开仓库的 **Actions** 页 → 左边点 “Deploy to GitHub Pages” → 右边 **Run workflow** → Run workflow
-   （第 3 步推送时 Pages 还没打开，第一次自动构建会失败，属于正常，手动再跑一次就好）
-6. 等一两分钟，看到绿色的 ✓ 后，打开 **https://wwbosell.github.io**
+1. **建仓库**：打开 https://github.com/new
+   - Repository name 填 **`wwbosell.github.io`**（必须一字不差），选 **Public**
+   - 下面的 README、.gitignore、license **都不要勾**（要一个空仓库）→ Create repository
+2. **添加密钥**：打开 https://github.com/settings/ssh/new
+   - Title 随便写，比如 `Mac - personal site`；Key type 选 Authentication Key
+   - Key 一栏粘贴 `~/.ssh/github_wwbosell.pub` 的内容（终端里运行 `cat ~/.ssh/github_wwbosell.pub` 就能看到，以 `ssh-ed25519` 开头的一整行）→ Add SSH key
+3. **打开 Pages**：仓库页 → **Settings → Pages** → Build and deployment 的 **Source 选 “GitHub Actions”**
+4. **第一次推送**：双击 `发布更新.command`；或者在终端里：
+   ```bash
+   cd ~/Desktop/web
+   git push -u origin main
+   ```
+5. 等一两分钟，仓库的 **Actions** 页出现绿色 ✓ 后，打开 **https://wwbosell.github.io**
 
 > 仓库是公开的：任何人都能看到网站的源代码和文章原稿（草稿 `draft: true` 的文章也在里面，只是不显示在网站上）。不要把密码、密钥写进任何文件。
 
 ## 平时怎么更新
 
-**方法一：在电脑上改，用 GitHub Desktop 发布（推荐）**
+**在电脑上改（推荐）**
 
-1. 用任意编辑器改文件（下面“要改哪里”有对照表），比如在 `src/content/blog/` 里新建一篇 `.md`
-2. 想先看看效果：双击 `预览网站.command`，浏览器打开 http://localhost:4321
-3. 打开 GitHub Desktop，左边会列出改动的文件 → 左下角 Summary 写一句说明（比如“新文章：xxx”）→ **Commit to main** → 上方 **Push origin**
-4. 一两分钟后网站自动更新。在仓库的 Actions 页能看到进度：绿色 ✓ 是成功，红色 ✗ 是失败（点进去能看到哪里出错，通常是文章开头的格式写错了）
+1. 用任意编辑器改文件（上面“要改哪里”有对照表），比如在 `src/content/blog/` 里新建一篇 `.md`
+2. 想先看看效果：双击 `预览网站.command`，浏览器打开 http://localhost:4321（需要先装 [Node.js](https://nodejs.org) 的 LTS 版本，装一次就好）
+3. 双击 **`发布更新.command`**：它会先同步网上的改动，列出你改了哪些文件，让你写一句说明，然后推送
+4. 一两分钟后网站自动更新。进度看 https://github.com/wwbosell/wwbosell.github.io/actions ：绿色 ✓ 成功，红色 ✗ 失败（点进去能看到原因，通常是文章开头的格式写错了）
 
-**方法二：直接在 GitHub 网页上改（适合改个错字，手机上也行）**
+喜欢用终端的话，同样的事情是这四行：
+```bash
+cd ~/Desktop/web
+git pull
+git add -A
+git commit -m "这次改了什么"
+git push
+```
 
-- 改已有文件：在 github.com 的仓库里找到文件 → 点右上角铅笔图标 ✏️ → 改完点 **Commit changes**
-- 写新文章：进到 `src/content/blog/`（或 `life/`）→ **Add file → Create new file** → 文件名写 `xxx.md` → 照着别的文章开头的格式写 → Commit changes
-- 在网页上改过之后，下次在电脑上改之前，先在 GitHub Desktop 里点 **Fetch origin → Pull origin**，把网页上的改动同步下来，免得两边冲突
+**在 GitHub 网页上改（改个错字、手机上临时改）**
 
-**方法三：让 Claude 帮你改**，改好后你在 GitHub Desktop 里 Commit + Push 就行。
+- 改已有文件：在仓库里找到文件 → 右上角铅笔图标 ✏️ → 改完点 **Commit changes**，网站会自动更新
+- 写新文章：进到 `src/content/blog/`（或 `life/`）→ **Add file → Create new file** → 文件名 `xxx.md` → 照着别的文章开头的格式写 → Commit changes
+- 网页上改过之后，回到电脑上改之前，先双击 **`同步网上的改动.command`**（或运行 `git pull`）。`发布更新.command` 也会先自动同步，所以忘了也问题不大
+
+**让 Claude 帮你改**：改好后双击 `发布更新.command` 就行。
 
 ## 想用自己的域名（可选）
 
