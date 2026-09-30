@@ -32,7 +32,7 @@ export const SITE = {
     email: 'you@example.com', // TODO
     scholar: '', // Google Scholar 主页链接
     orcid: '', // ORCID 链接
-    github: 'https://github.com/wwbosell',
+    github: 'https://github.com/wcy1wcy',
     twitter: '',
   },
 

@@ -16,8 +16,8 @@ else
 fi
 echo; echo "③ 推送到 GitHub……"
 if git push; then
-  echo; echo "✓ 完成！一两分钟后网站会自动更新：https://wwbosell.github.io"
-  echo "  构建进度：https://github.com/wwbosell/wwbosell.github.io/actions"
+  echo; echo "✓ 完成！一两分钟后网站会自动更新：https://wcy1wcy.github.io"
+  echo "  构建进度：https://github.com/wcy1wcy/wcy1wcy.github.io/actions"
 else
   echo "✗ 推送失败。把这个窗口的内容发给 Claude 看看。"
 fi

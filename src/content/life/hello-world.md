@@ -23,7 +23,7 @@ tags: [标签一, 标签二]
 ---
 ```
 
-下面就是正文，用 Markdown 写。**加粗**、*斜体*、[链接](https://github.com/wwbosell)、列表、引用都可以：
+下面就是正文，用 Markdown 写。**加粗**、*斜体*、[链接](https://github.com/wcy1wcy)、列表、引用都可以：
 
 > 引用会显示成这样——一段安静的斜体。
 

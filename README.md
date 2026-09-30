@@ -1,7 +1,7 @@
-# wwbosell.github.io · 个人网站
+# wcy1wcy.github.io · 个人网站
 
 Astro 搭的静态网站。斯莱特林配色，带“地窖模式”（深色）和一些小彩蛋。
-网址：**https://wwbosell.github.io**（放在 GitHub Pages 上，免费；每次推送到 GitHub 会自动更新）
+网址：**https://wcy1wcy.github.io**（放在 GitHub Pages 上，免费；每次推送到 GitHub 会自动更新）
 
 ## 在自己电脑上预览
 
@@ -64,9 +64,9 @@ GitHub Pages 只能放静态网页，所以统计交给 [GoatCounter](https://ww
 
 网站上线后这样接上：
 
-1. 去 goatcounter.com 注册，站点代码（Code）随便起，比如 `wwbosell`，以后地址就是 `wwbosell.goatcounter.com`
+1. 去 goatcounter.com 注册，站点代码（Code）随便起，比如 `wcy1wcy`，以后地址就是 `wcy1wcy.goatcounter.com`
 2. 在 GoatCounter 的 Settings 里勾上 **“Allow adding visitor counts on your website”**（首页和活点地图的总访问量要用）
-3. 把 `src/config.ts` 里的 `goatcounter` 改成你的站点代码，比如 `'wwbosell'`。这一步之后，网站开始计数
+3. 把 `src/config.ts` 里的 `goatcounter` 改成你的站点代码，比如 `'wcy1wcy'`。这一步之后，网站开始计数
 4. GoatCounter → Settings → API → 新建一个 API 密钥，只勾 **“Read statistics”**
 5. GitHub 仓库 → Settings → Secrets and variables → Actions：
    - **Variables** 页：新建 `GOATCOUNTER_CODE`，值填站点代码
@@ -127,21 +127,21 @@ GitHub Pages 只能放静态网页，所以统计交给 [GoatCounter](https://ww
 ## 第一次上线（只需要做一次）
 
 不用装任何客户端：GitHub 网页上建仓库，本地用系统自带的 git 推送。
-这台电脑上已经配好了：推送用的 SSH 密钥在 `~/.ssh/github_wwbosell`（只给这个项目用），仓库地址 `git@github.com:wwbosell/wwbosell.github.io.git`。
+这台电脑上已经配好了：推送用的 SSH 密钥在 `~/.ssh/github_wcy1wcy`（只给这个项目用），仓库地址 `git@github.com:wcy1wcy/wcy1wcy.github.io.git`。
 
 1. **建仓库**：打开 https://github.com/new
-   - Repository name 填 **`wwbosell.github.io`**（必须一字不差），选 **Public**
+   - Repository name 填 **`wcy1wcy.github.io`**（必须一字不差），选 **Public**
    - 下面的 README、.gitignore、license **都不要勾**（要一个空仓库）→ Create repository
 2. **添加密钥**：打开 https://github.com/settings/ssh/new
    - Title 随便写，比如 `Mac - personal site`；Key type 选 Authentication Key
-   - Key 一栏粘贴 `~/.ssh/github_wwbosell.pub` 的内容（终端里运行 `cat ~/.ssh/github_wwbosell.pub` 就能看到，以 `ssh-ed25519` 开头的一整行）→ Add SSH key
+   - Key 一栏粘贴 `~/.ssh/github_wcy1wcy.pub` 的内容（终端里运行 `cat ~/.ssh/github_wcy1wcy.pub` 就能看到，以 `ssh-ed25519` 开头的一整行）→ Add SSH key
 3. **打开 Pages**：仓库页 → **Settings → Pages** → Build and deployment 的 **Source 选 “GitHub Actions”**
 4. **第一次推送**：双击 `发布更新.command`；或者在终端里：
    ```bash
    cd ~/Desktop/web
    git push -u origin main
    ```
-5. 等一两分钟，仓库的 **Actions** 页出现绿色 ✓ 后，打开 **https://wwbosell.github.io**
+5. 等一两分钟，仓库的 **Actions** 页出现绿色 ✓ 后，打开 **https://wcy1wcy.github.io**
 
 > 仓库是公开的：任何人都能看到网站的源代码和文章原稿（草稿 `draft: true` 的文章也在里面，只是不显示在网站上）。不要把密码、密钥写进任何文件。
 
@@ -152,7 +152,7 @@ GitHub Pages 只能放静态网页，所以统计交给 [GoatCounter](https://ww
 1. 用任意编辑器改文件（上面“要改哪里”有对照表），比如在 `src/content/blog/` 里新建一篇 `.md`
 2. 想先看看效果：双击 `预览网站.command`，浏览器打开 http://localhost:4321（需要先装 [Node.js](https://nodejs.org) 的 LTS 版本，装一次就好）
 3. 双击 **`发布更新.command`**：它会先同步网上的改动，列出你改了哪些文件，让你写一句说明，然后推送
-4. 一两分钟后网站自动更新。进度看 https://github.com/wwbosell/wwbosell.github.io/actions ：绿色 ✓ 成功，红色 ✗ 失败（点进去能看到原因，通常是文章开头的格式写错了）
+4. 一两分钟后网站自动更新。进度看 https://github.com/wcy1wcy/wcy1wcy.github.io/actions ：绿色 ✓ 成功，红色 ✗ 失败（点进去能看到原因，通常是文章开头的格式写错了）
 
 喜欢用终端的话，同样的事情是这四行：
 ```bash
@@ -173,9 +173,9 @@ git push
 
 ## 想用自己的域名（可选）
 
-`wwbosell.github.io` 已经是一个任何人都能访问的网址。如果想要 `cywang.com` 这样的域名：
+`wcy1wcy.github.io` 已经是一个任何人都能访问的网址。如果想要 `cywang.com` 这样的域名：
 
 1. 在域名注册商（Cloudflare、Namecheap、阿里云等）买一个域名
 2. 仓库 → Settings → Pages → **Custom domain** 填上域名，保存，勾选 Enforce HTTPS
-3. 在域名注册商的 DNS 设置里，按 GitHub 页面上的提示添加记录（子域名如 `www` 用 CNAME 指向 `wwbosell.github.io`；根域名用 GitHub 给的几条 A 记录）
+3. 在域名注册商的 DNS 设置里，按 GitHub 页面上的提示添加记录（子域名如 `www` 用 CNAME 指向 `wcy1wcy.github.io`；根域名用 GitHub 给的几条 A 记录）
 4. 把 `astro.config.mjs` 里的 `site` 改成新域名，提交推送
