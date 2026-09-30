@@ -1,0 +1,59 @@
+---
+// 小游戏里藏东西的地方：一个看起来有点可疑的小图标，点一下就算找到。
+// id 对应 src/data/magic.ts 里 HUNT 的 id。
+interface Props {
+  id: string;
+  icon: 'padlock' | 'ink' | 'pensieve' | 'wands' | 'cobweb' | 'broken';
+  label: string; // 给读屏软件和鼠标悬停看的说明
+  size?: number;
+  class?: string;
+}
+const { id, icon, label, size = 30, class: cls = '' } = Astro.props;
+---
+<button type="button" class:list={['find-icon', `find-${icon}`, cls]} data-find={id} aria-label={label} title={label}>
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    {icon === 'padlock' && (
+      <>
+        <path class="shackle" d="M10.5 14v-3.5a5.5 5.5 0 0 1 11 0V14" />
+        <rect x="7.5" y="14" width="17" height="13" rx="2.5" />
+        <circle cx="16" cy="19.5" r="1.6" /><path d="M16 21v2.5" />
+      </>
+    )}
+    {icon === 'ink' && (
+      <>
+        <path d="M11 13h10v2.5c2 1 3 2.8 3 5V26a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-5.5c0-2.2 1-4 3-5V13z" />
+        <path d="M12 10h8v3h-8z" />
+        <path class="quill" d="M17 12C19 7 23 3.5 28 2.5c-1 5-4.5 9-9.5 11" />
+        <path d="M10 22.5h12" opacity=".5" />
+      </>
+    )}
+    {icon === 'pensieve' && (
+      <>
+        <path d="M4 14h24c0 5.5-5.4 9-12 9S4 19.5 4 14z" />
+        <path d="M12 23l-1.5 5h11L20 23" />
+        <path class="swirl" d="M9 14c1.5-2.5 4-3 5.5-1.5S17 15 19 13.5s2-3 4-2" />
+      </>
+    )}
+    {icon === 'wands' && (
+      <>
+        <path d="M5 27L21 7" /><path d="M27 27L11 7" />
+        <path class="spark" d="M16 3.5v2.4M14.2 4.7h3.6" />
+      </>
+    )}
+    {icon === 'cobweb' && (
+      <>
+        <path d="M3 3l26 26M3 3l12 26M3 3l26 12" opacity=".8" />
+        <path d="M3 12c3.5.2 6-.6 8-3.2s2-4.6 1-5.8" />
+        <path d="M3 20c6 .6 10.5-.8 13.5-4.5S20 8 19 3" />
+        <path d="M3 28c8.5 1 15-1 19-6s5-11 4-17" />
+      </>
+    )}
+    {icon === 'broken' && (
+      <>
+        <path class="link-a" d="M13.5 18.5l-3 3a4 4 0 0 1-5.6-5.6l3-3a4 4 0 0 1 5.6 0" />
+        <path class="link-b" d="M18.5 13.5l3-3a4 4 0 0 1 5.6 5.6l-3 3a4 4 0 0 1-5.6 0" />
+        <path class="crack" d="M14 10l1-3M18 22l-1 3M10 14l-3-1M22 18l3 1" />
+      </>
+    )}
+  </svg>
+</button>

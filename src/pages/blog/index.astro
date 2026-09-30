@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import MovingPhoto from '../../components/MovingPhoto.astro';
+import Find from '../../components/Find.astro';
+import { getPosts, firstParagraph } from '../../lib/posts';
+import { readingMinutes } from '../../lib/readingTime';
+import { fmtDate } from '../../lib/format';
+const posts = await getPosts('blog');
+const [lead, ...rest] = posts;
+---
+<Base title="Blog" description="The Gazette: long-form writing." wide decor>
+  <header class="page-head section-mast has-find">
+    <Find id="spell:aparecium" icon="ink" label="An ink bottle · 一瓶墨水" class="find-corner" />
+    <span class="eyebrow">Blog · 博客 — <em>The Gazette</em></span>
+    <h1 class="page-title">The Gazette<span class="zh">博客</span></h1>
+    <p class="page-lede">正式一点的长文章：研究、方法和想了很久的事。最新的一篇会登上首页头条。</p>
+  </header>
+
+  {lead ? (
+    <>
+      <article class="gz-lead">
+        <a href={`/blog/${lead.id}/`} class="gz-lead-link">
+          <div class="gz-lead-text">
+            <span class="kicker">{lead.data.kicker ?? 'Latest'}</span>
+            <h2 class="gz-headline">{lead.data.title}</h2>
+            {lead.data.description && <p class="gz-dek">{lead.data.description}</p>}
+            <p class="gz-excerpt dropcap">{firstParagraph(lead.body, 200)}</p>
+            <div class="gz-byline"><time datetime={lead.data.date.toISOString()}>{fmtDate(lead.data.date)}</time> · {readingMinutes(lead.body)} min brew · <span class="more">Continue reading →</span></div>
+          </div>
+          <MovingPhoto src={lead.data.cover} />
+        </a>
+      </article>
+      {rest.length > 0 && (
+        <ul class="gz-list">
+          {rest.map((p) => (
+            <li>
+              <a href={`/blog/${p.id}/`}>
+                <span class="kicker">{p.data.kicker ?? fmtDate(p.data.date)}</span>
+                <h3>{p.data.title}</h3>
+                {p.data.description && <p>{p.data.description}</p>}
+                <span class="gz-byline"><time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time> · {readingMinutes(p.body)} min brew</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  ) : <p class="empty">The presses are quiet. Nothing printed yet.</p>}
+</Base>

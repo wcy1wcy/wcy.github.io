@@ -1,0 +1,90 @@
+---
+// 首页的小游戏说明，排成《预言家日报》号外的样子。进度由 Magic.astro 的脚本实时更新。
+import Creature from './Creature.astro';
+import { HUNT, GRADES } from '../data/magic';
+const nSpells = HUNT.filter((h) => h.type === 'spell').length;
+const nCreatures = HUNT.filter((h) => h.type === 'creature').length;
+---
+<section class="prophet" id="hunt" aria-labelledby="prophet-headline">
+  <div class="prophet-flag">
+    <span class="pf-side">Special Edition<br /><b>号外</b></span>
+    <div class="pf-center">
+      <span class="pf-reprint">Reprinted from · 转载自</span>
+      <span class="pf-title">The Daily Prophet</span>
+      <span class="pf-zh">预言家日报 · 霍格沃茨特刊</span>
+    </div>
+    <span class="pf-side right">Extra! Extra!<br /><b>免费阅读</b></span>
+  </div>
+
+  <h2 class="prophet-headline" id="prophet-headline">Spells &amp; Creatures Loose All Over the Castle!</h2>
+  <p class="prophet-headline-zh">{nSpells} 条咒语、{nCreatures} 只神奇生物散落城堡各处</p>
+  <p class="prophet-deck">魔法部呼吁读者：看到可疑的小东西，请点一下。<em>Ministry urges readers: if it looks suspicious, click it.</em></p>
+
+  <div class="prophet-body">
+    <figure class="prophet-photo">
+      <div class="pp-frame">
+        <div class="pp-scene" aria-hidden="true">
+          <span class="pp-coin c1" /><span class="pp-coin c2" /><span class="pp-coin c3" />
+          <Creature kind="niffler" size={120} class="pp-niffler" />
+        </div>
+        <span class="pp-wanted">WANTED · 通缉</span>
+      </div>
+      <figcaption>图：一只嗅嗅在逃，嘴里叼着一枚金加隆。最后一次被目击于有求必应屋附近。</figcaption>
+    </figure>
+
+    <div class="prophet-cols">
+      <p class="dropcap prophet-lede">
+        <b>本报讯</b> 昨夜，本站发生了一起不大不小的魔法事故：皮皮鬼把咒语书撕成了碎页，
+        {nSpells} 条咒语和 {nCreatures} 只神奇生物趁乱溜进了网站的各个角落。据目击者称，
+        它们大多藏在“说得通”的地方——开锁咒躲在锁着的门后，猫头鹰守着邮报，嗅嗅围着亮闪闪的东西打转。
+      </p>
+
+      <div class="prophet-block">
+      <h3 class="prophet-sub">How to play <span>怎么玩</span></h3>
+      <ol class="prophet-list">
+        <li>逛遍网站的每一页，留意那些<b>看起来有点可疑</b>的小图标、会动的小东西和奇怪的字眼。</li>
+        <li><b>点一下</b>就算找到了。找到的咒语会当场生效一次。</li>
+        <li>本来就会念咒？在页面空白处<b>直接打出来</b>（比如 <code>lumos</code>），也算学会。</li>
+      </ol>
+
+      </div>
+      <div class="prophet-block">
+      <h3 class="prophet-sub">Rules <span>规则</span></h3>
+      <ul class="prophet-list">
+        <li>共 {HUNT.length} 项：{nSpells} 条咒语（含活点地图的两句口令）和 {nCreatures} 只神奇生物。</li>
+        <li>每找到一项都会提醒你。左下角的 <b>✦</b> 随时显示进度，点开就是你的收集册。</li>
+        <li>卡住了？收集册里，每一项没找到的都附有一句线索。</li>
+        <li>收集记录只保存在你自己的浏览器里，换一台设备会重新开始。</li>
+      </ul>
+
+      </div>
+      <div class="prophet-block">
+      <h3 class="prophet-sub">Reward <span>奖励</span></h3>
+      <p class="prophet-reward">
+        按找到的数量评定 <b>O.W.L. 成绩</b>（普通巫师等级考试）：
+        {GRADES.map((g, i) => <><span class="grade">{g.en} · {g.zh}</span>{i < GRADES.length - 1 && ' → '}</>)}。
+        全部找齐，城堡会为你放出一只守护神。
+      </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="prophet-board">
+    <div class="pb-progress">
+      <span class="pb-label">Your progress · 你的进度</span>
+      <span class="pb-count"><b data-hunt-count>0</b> / {HUNT.length}</span>
+      <span class="pb-detail">咒语 <b data-hunt-type-count="spell">0/{nSpells}</b> · 神奇生物 <b data-hunt-type-count="creature">0/{nCreatures}</b> · O.W.L. <b data-hunt-grade>Troll · 巨怪</b></span>
+      <span class="pb-track" aria-hidden="true"><span class="pb-fill" data-hunt-bar /></span>
+    </div>
+    <div class="pb-actions">
+      <button class="btn" type="button" data-hunt-open>打开我的收集册 ✦</button>
+      <button class="btn btn-ghost" type="button" data-hunt-clue>给我一条线索</button>
+    </div>
+  </div>
+</section>
+
+<a class="spellbook-banner" href="/spells/">
+  <span class="sb-kicker">Required reading · 必读</span>
+  <span class="sb-title">The Standard Book of Spells <span>标准咒语</span></span>
+  <span class="sb-desc">你的收集册、所有线索、已经学会的咒语，都记在这本书里 →</span>
+</a>

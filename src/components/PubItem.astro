@@ -1,0 +1,36 @@
+---
+import type { Pub } from '../lib/bibtex';
+import { SITE } from '../config';
+interface Props { pub: Pub; showYear?: boolean }
+const { pub, showYear = false } = Astro.props;
+const f = pub.fields;
+const link = f.url || f.pdf || (f.doi ? `https://doi.org/${f.doi}` : '');
+const selfSet = new Set(SITE.authorNames.map((n) => n.toLowerCase()));
+const isSelf = (a: string) => selfSet.has(a.toLowerCase());
+const actions = [
+  ['PDF', f.pdf],
+  ['Code', f.code],
+  ['Slides', f.slides],
+  ['DOI', f.doi ? `https://doi.org/${f.doi}` : ''],
+].filter(([, href]) => href);
+---
+<li class="pub">
+  <div class="pub-title">{link ? <a href={link} target="_blank" rel="noopener">{pub.title}</a> : pub.title}</div>
+  <div class="pub-authors">
+    {pub.authors.map((a, i) => (
+      <>
+        {isSelf(a) ? <strong>{a}</strong> : a}
+        {i < pub.authors.length - 1 ? ', ' : ''}
+      </>
+    ))}
+  </div>
+  <div class="pub-venue">{pub.venue}{showYear && pub.year ? `, ${pub.year}` : ''}</div>
+  <div class="pub-actions">
+    {f.note && <span class="badge">{f.note}</span>}
+    {actions.map(([label, href]) => (
+      <a class="btn-sm" href={href} target="_blank" rel="noopener">{label}</a>
+    ))}
+    <button class="btn-sm" type="button" data-bib aria-expanded="false">BibTeX</button>
+  </div>
+  <pre class="bib" hidden><button class="btn-sm bib-copy" type="button" data-copy>Copy</button>{pub.raw}</pre>
+</li>

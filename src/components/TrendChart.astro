@@ -1,0 +1,86 @@
+---
+// 每日访客曲线。曲线本身是 SVG（拉伸铺满），坐标轴文字用 HTML 叠在上面，手机上也不会变小。
+import { fmtNum } from '../lib/stats';
+interface Props { daily: { day: string; count: number }[] }
+const { daily } = Astro.props;
+
+const W = 1000;
+const H = 300;
+const n = daily.length;
+const peak = Math.max(1, ...daily.map((d) => d.count));
+// 纵轴取一个整齐的上限，分 3 格
+const step = (() => {
+  const raw = peak / 3;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw)!;
+})();
+const top = step * 3;
+const x = (i: number) => (n > 1 ? (i / (n - 1)) * W : W / 2);
+const y = (v: number) => H - (v / top) * H;
+const pts = daily.map((d, i) => `${x(i).toFixed(1)},${y(d.count).toFixed(1)}`);
+const line = `M${pts.join('L')}`;
+const area = `${line}L${W},${H}L0,${H}Z`;
+const yTicks = [0, 1, 2, 3].map((k) => k * step);
+// 横轴：每个月的 1 号
+const xTicks = daily
+  .map((d, i) => ({ i, d: new Date(d.day + 'T00:00:00') }))
+  .filter(({ d, i }) => d.getDate() === 1 || i === 0)
+  .filter(({ i }, k, arr) => !(k === 0 && arr[1] && arr[1].i - i < n * 0.08))
+  .map(({ i, d }) => ({ left: (x(i) / W) * 100, label: d.toLocaleDateString('en-GB', { month: 'short', day: i === 0 ? 'numeric' : undefined }) }));
+const peakIdx = daily.findIndex((d) => d.count === peak);
+---
+<figure class="trend" data-trend={JSON.stringify(daily)} data-top={top}>
+  <div class="trend-plot">
+    {yTicks.map((t) => (
+      <div class="trend-grid" style={`top:${(1 - t / top) * 100}%`}><span>{fmtNum(t)}</span></div>
+    ))}
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      <path class="trend-area" d={area} />
+      <path class="trend-line" d={line} vector-effect="non-scaling-stroke" />
+    </svg>
+    <div class="trend-peak" style={`left:${(x(peakIdx) / W) * 100}%;top:${(y(peak) / H) * 100}%`}>
+      <span>峰值 {fmtNum(peak)}</span>
+    </div>
+    <div class="trend-cross" hidden><i /></div>
+    <div class="trend-dot" hidden />
+    <div class="trend-tip" hidden />
+  </div>
+  <div class="trend-x" aria-hidden="true">
+    {xTicks.map((t) => <span style={`left:${t.left}%`}>{t.label}</span>)}
+  </div>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-trend]').forEach((fig) => {
+    const data: { day: string; count: number }[] = JSON.parse(fig.dataset.trend!);
+    const top = Number(fig.dataset.top);
+    const plot = fig.querySelector<HTMLElement>('.trend-plot')!;
+    const cross = fig.querySelector<HTMLElement>('.trend-cross')!;
+    const dot = fig.querySelector<HTMLElement>('.trend-dot')!;
+    const tip = fig.querySelector<HTMLElement>('.trend-tip')!;
+    const fmt = (s: string) =>
+      new Date(s + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+    const move = (clientX: number) => {
+      const r = plot.getBoundingClientRect();
+      const i = Math.round(((clientX - r.left) / r.width) * (data.length - 1));
+      const d = data[Math.min(data.length - 1, Math.max(0, i))];
+      const idx = data.indexOf(d);
+      const left = (idx / (data.length - 1)) * 100;
+      const topPct = (1 - d.count / top) * 100;
+      cross.hidden = dot.hidden = tip.hidden = false;
+      cross.style.left = dot.style.left = left + '%';
+      dot.style.top = topPct + '%';
+      tip.innerHTML = '<span></span><b></b>';
+      tip.querySelector('span')!.textContent = fmt(d.day);
+      tip.querySelector('b')!.textContent = `${d.count.toLocaleString('en-US')} visitors`;
+      const w = tip.offsetWidth;
+      const px = (left / 100) * r.width;
+      tip.style.left = Math.min(Math.max(0, px + 12 + w > r.width ? px - w - 12 : px + 12), r.width - w) + 'px';
+    };
+    const hide = () => (cross.hidden = dot.hidden = tip.hidden = true);
+    plot.addEventListener('pointermove', (e) => move(e.clientX));
+    plot.addEventListener('pointerdown', (e) => move(e.clientX));
+    plot.addEventListener('pointerleave', hide);
+  });
+</script>

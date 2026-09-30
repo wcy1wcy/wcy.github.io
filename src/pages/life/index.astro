@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro';
+import Volume from '../../components/Volume.astro';
+import WaxSeal from '../../components/WaxSeal.astro';
+import Find from '../../components/Find.astro';
+import { getPosts } from '../../lib/posts';
+import { fmtDate } from '../../lib/format';
+const posts = await getPosts('life');
+const nHowl = posts.filter((p) => p.data.volume).length;
+const filters = [
+  { key: 'all', label: '全部', en: 'Everything', n: posts.length },
+  { key: 'pensieve', label: '日常', en: 'Pensieve', n: posts.length - nHowl },
+  { key: 'howlers', label: '吼叫信', en: 'Howlers', n: nHowl },
+];
+---
+<Base title="Life" description="The Pensieve and the Howlers: everyday life, notes, and the occasional rant." wide decor>
+  <header class="page-head section-mast has-find">
+    <Find id="spell:expectopatronum" icon="pensieve" label="The Pensieve · 冥想盆" size={40} class="find-corner" />
+    <span class="eyebrow">Life · 日常 — <em>The Pensieve & Howlers</em></span>
+    <h1 class="page-title">Life<span class="zh">日常</span></h1>
+    <p class="page-lede">
+      把记忆从脑子里抽出来，放进冥想盆：生活、照片、随手记下的小事。
+      偶尔也会有一封<button class="find-word howl-word" type="button" data-find="spell:riddikulus">吼叫信</button>——红信封，打开请自负后果。
+    </p>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filter posts">
+    {filters.map((f) => (
+      <button type="button" class="filter" data-filter={f.key} aria-pressed={f.key === 'all' ? 'true' : 'false'}>
+        {f.label}<span class="en">{f.en}</span><span class="n">{f.n}</span>
+      </button>
+    ))}
+  </div>
+
+  {posts.length ? (
+    <ul class="memories">
+      {posts.map((p) => {
+        const v = p.data.volume;
+        return (
+          <li class:list={['memory', { 'is-howler': v }]} data-kind={v ? 'howlers' : 'pensieve'}>
+            <a href={`/life/${p.id}/`}>
+              {v ? (
+                <div class="envelope" aria-hidden="true">
+                  <span class="flap" />
+                  <WaxSeal size={76} tone="red" glyph={'!'.repeat(v)} class="env-seal" />
+                </div>
+              ) : p.data.cover ? (
+                <img class="cover" src={p.data.cover} alt="" loading="lazy" />
+              ) : (
+                <div class="swirl" aria-hidden="true" />
+              )}
+              <div class="body">
+                <span class="k">{v ? 'Howler' : 'Pensieve'}</span>
+                <div class:list={['t', { rattle: v === 3 }]}>{p.data.title}</div>
+                <div class="meta">
+                  {fmtDate(p.data.date)}
+                  {p.data.location && ` · ${p.data.location}`}
+                  {v && <> · volume<Volume level={v} /></>}
+                </div>
+                {p.data.description && <p class="d">{p.data.description}</p>}
+              </div>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  ) : <p class="empty">The Pensieve is still. Nothing here yet.</p>}
+</Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const items = document.querySelectorAll<HTMLElement>('.memories > li');
+  function apply(key: string) {
+    if (!['all', 'pensieve', 'howlers'].includes(key)) key = 'all';
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === key)));
+    items.forEach((li) => (li.hidden = key !== 'all' && li.dataset.kind !== key));
+  }
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const key = b.dataset.filter!;
+      history.replaceState(null, '', key === 'all' ? location.pathname : `#${key}`);
+      apply(key);
+    })
+  );
+  apply(location.hash.slice(1));
+  window.addEventListener('hashchange', () => apply(location.hash.slice(1)));
+</script>

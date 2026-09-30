@@ -1,0 +1,196 @@
+---
+import '../styles/global.css';
+import { SITE, NAV } from '../config';
+import SnakeMark from '../components/SnakeMark.astro';
+import Forest from '../components/Forest.astro';
+import Magic from '../components/Magic.astro';
+import Creature from '../components/Creature.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  bodyClass?: string;
+  wide?: boolean; // 首页、栏目首页用宽版面；文章页保持窄的阅读版式
+  decor?: boolean; // 羊皮纸纹理等装饰，只在首页和栏目首页打开
+}
+const { title, description = SITE.description, bodyClass = '', wide = false, decor = false } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.title}` : `${SITE.title} · ${SITE.nameZh}`;
+const path = Astro.url.pathname;
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const year = new Date().getFullYear();
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {SITE.hideFromSearch && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#f6f4ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1310" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=UnifrakturMaguntia&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Noto+Serif+SC:wght@400;500;600&display=swap"
+    />
+    <script is:inline>
+      // 在页面绘制前就定好主题，避免闪烁
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    {SITE.goatcounter && (
+      <script is:inline async data-goatcounter={`https://${SITE.goatcounter}.goatcounter.com/count`} src="//gc.zgo.at/count.js"></script>
+    )}
+  </head>
+  <body class:list={[bodyClass, { decor }]}>
+    <!-- 深色模式 = 黑湖底下的斯莱特林公共休息室。窗外偶尔有大乌贼游过 -->
+    <div class="lake" aria-hidden="true">
+      <div class="squid"><Creature kind="squid" size={110} /></div>
+      <i class="bubble" style="--x:18%;--d:0s" /><i class="bubble" style="--x:64%;--d:7s" /><i class="bubble" style="--x:86%;--d:13s" />
+    </div>
+    {decor && <div class="parchment" aria-hidden="true"></div>}
+    <a class="sr-only" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wrap wide">
+        <a class="brand" href="/" aria-label="Home">
+          <SnakeMark />
+          <span>{SITE.name}</span>
+        </a>
+        <div class="header-right">
+          <nav aria-label="Main">
+            <ul class="nav">
+              {NAV.map((n) => (
+                <li class={n.href === '/' ? 'nav-home' : undefined}>
+                  <a href={n.href} data-alias={n.alias} aria-current={isActive(n.href) ? 'page' : undefined}>
+                    {n.label}<span class="zh">{n.zh}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <button class="spell-toggle" type="button" id="spell-toggle" aria-label="Toggle dark mode">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2.5 13.5l7.5-7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M12.5 1.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="currentColor" />
+            </svg>
+            <span id="spell-word">Nox</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class:list={['wrap', { wide }]}>
+        <slot />
+      </div>
+    </main>
+
+    <Forest />
+    <footer class="site-footer">
+      <div class="wrap wide">
+        <SnakeMark size={20} />
+        <div class="quote">{SITE.footerQuote}</div>
+        <div class="common-room">
+          You are in the Slytherin common room, beneath the Black Lake. · 你在斯莱特林公共休息室里，窗外是黑湖。
+          <button class="squid-window" type="button" data-find="creature:squid" aria-label="The Giant Squid · 大乌贼" title="窗外有什么东西游过去了"><Creature kind="squid" size={22} /></button>
+        </div>
+        <div>© {year} {SITE.name} · {SITE.nameZh} · Mischief managed · 恶作剧完毕</div>
+        <div class="hint">
+          This site answers to spells — type <code>lumos</code>, <code>nox</code> or <code>accio</code> anywhere.
+          全部咒语见 <a href="/spells/">The Standard Book of Spells · 咒语书</a>
+        </div>
+        <div class="invisible-ink">Written in invisible ink: 你找到了隐形墨水。斯莱特林加十分。</div>
+      </div>
+    </footer>
+    <Magic />
+
+    <div class="spell-flash" id="spell-flash" aria-hidden="true"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const root = document.documentElement;
+      const btn = document.getElementById('spell-toggle')!;
+      const word = document.getElementById('spell-word')!;
+      const flash = document.getElementById('spell-flash')!;
+      const toastEl = document.getElementById('toast')!;
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const current = () =>
+        (root.getAttribute('data-theme') as 'light' | 'dark' | null) || (mq.matches ? 'dark' : 'light');
+
+      function syncButton() {
+        const dark = current() === 'dark';
+        word.textContent = dark ? 'Lumos' : 'Nox';
+        btn.title = dark ? 'Lumos · 荧光闪烁：点亮' : 'Nox · 诺克斯：去斯莱特林公共休息室';
+      }
+
+      let toastTimer: number | undefined;
+      // msg 只会是网站自己写好的文字（咒语名、提示），所以可以带简单的 HTML
+      function toast(msg: string, ms = 2600) {
+        toastEl.innerHTML = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toastEl.classList.remove('show'), ms);
+      }
+
+      function cast(theme: 'light' | 'dark', origin?: { x: number; y: number }) {
+        if (origin) {
+          flash.style.setProperty('--fx', origin.x + 'px');
+          flash.style.setProperty('--fy', origin.y + 'px');
+        } else {
+          flash.style.setProperty('--fx', '50%');
+          flash.style.setProperty('--fy', '40%');
+        }
+        flash.className = 'spell-flash';
+        void flash.offsetWidth; // 重新触发动画
+        flash.classList.add(theme === 'light' ? 'lumos' : 'nox');
+        root.setAttribute('data-theme', theme);
+        try { localStorage.setItem('theme', theme); } catch (e) {}
+        syncButton();
+      }
+
+      btn.addEventListener('click', () => {
+        const r = btn.getBoundingClientRect();
+        const next = current() === 'dark' ? 'light' : 'dark';
+        cast(next, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        window.dispatchEvent(new CustomEvent('wand', { detail: next }));
+        toast(
+          next === 'light'
+            ? '<b>Lumos</b> · 荧光闪烁<span>魔杖亮了。</span>'
+            : '<b>Nox</b> · 诺克斯<span>欢迎来到斯莱特林公共休息室。窗外是黑湖。</span>',
+          3000
+        );
+      });
+      mq.addEventListener('change', syncButton);
+      syncButton();
+
+      // 给咒语引擎（components/Magic.astro）用
+      (window as any).__site = {
+        toast,
+        setTheme: (t: 'light' | 'dark') => cast(t),
+        forgetTheme: () => {
+          try { localStorage.removeItem('theme'); } catch (e) {}
+          root.removeAttribute('data-theme');
+          syncButton();
+        },
+      };
+
+      // 给打开开发者工具的人
+      console.log(
+        '%cThe Chamber of Secrets has been opened · 密室被打开了。%c\nSlytherin +10 points · 斯莱特林加十分。Try typing: accio, lumos, expecto patronum…',
+        'font: italic 20px Georgia, serif; color: #1e4d38;',
+        'font: 13px Georgia, serif; color: #7a837e;'
+      );
+    </script>
+  </body>
+</html>

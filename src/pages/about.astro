@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import SnakeMark from '../components/SnakeMark.astro';
+import Portrait from '../components/Portrait.astro';
+import Creature from '../components/Creature.astro';
+import Find from '../components/Find.astro';
+import { SITE } from '../config';
+import { EXPERIENCE, BIO_ZH, BIO_EN } from '../data/cv';
+---
+<Base title="About" description={`About ${SITE.name}`}>
+  <header class="page-head">
+    <span class="eyebrow">About · 关于 — <em>The Sorting Hat</em></span>
+    <h1 class="page-title">Hello<span class="zh">你好</span></h1>
+  </header>
+
+  <div class="about-grid">
+    <Portrait caption={false} />
+    <div class="bio">
+      {BIO_ZH.split('\n').map((l) => <p>{l}</p>)}
+      <p class="en">{BIO_EN}</p>
+      <div class="sorted">
+        <SnakeMark size={18} />
+        <span>The Hat said: <b>Slytherin!</b> — {SITE.sortedYear}</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Path<span class="zh">经历</span></h2>
+      <Find id="spell:expelliarmus" icon="wands" label="Two crossed wands · 两根交叉的魔杖" size={28} />
+    </div>
+    <ul class="timeline">
+      {EXPERIENCE.map((e) => (
+        <li><span class="when">{e.when}</span><span><span class="what">{e.what}</span><span class="where">{e.where}</span></span></li>
+      ))}
+    </ul>
+    {SITE.cv && <p style="margin-top:1.5rem"><a class="btn" href={SITE.cv}>Download CV ↓</a></p>}
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>Say hello<span class="zh">联系</span></h2></div>
+    <p class="owl-post">
+      <Creature kind="owl" size={30} />
+      Owl post · 猫头鹰送信 is slow; email is faster: <a href={`mailto:${SITE.links.email}`}>{SITE.links.email}</a>
+    </p>
+    <p class="invisible-ink">隐形墨水：分院帽其实犹豫过，差一点就把我分进了拉文克劳。</p>
+  </section>
+</Base>

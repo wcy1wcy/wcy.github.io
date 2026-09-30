@@ -1,0 +1,45 @@
+---
+// 页脚上方的禁林剪影。树林深处有八只眼睛（八眼巨蛛），偶尔会眨一下。
+const W = 1200;
+const H = 64;
+let seed = 7;
+const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+// 中间留一小块空地：夜骐站在那里，只是你看不见（小游戏的藏身处）
+const CLEARING = [572, 640];
+const trees = Array.from({ length: 46 }, (_, i) => {
+  const x = (i / 45) * W + (rand() - 0.5) * 20;
+  const h = 26 + rand() * 36;
+  const w = h * (0.42 + rand() * 0.12);
+  const back = i % 2 === 1;
+  // 三层三角形叠成一棵松树
+  const tiers = [0, 1, 2].map((t) => {
+    const top = H - h + t * h * 0.24;
+    const half = (w / 2) * (0.55 + t * 0.22);
+    const base = top + h * 0.42;
+    return `M${x.toFixed(1)} ${top.toFixed(1)}L${(x - half).toFixed(1)} ${base.toFixed(1)}H${(x + half).toFixed(1)}Z`;
+  });
+  return { x, d: tiers.join('') + `M${(x - 1.4).toFixed(1)} ${H - h * 0.2}h2.8V${H}h-2.8z`, back };
+}).filter((t) => t.x < CLEARING[0] || t.x > CLEARING[1]);
+const eyes = [
+  { x: 238, y: 46, delay: 0 },
+  { x: 712, y: 50, delay: 3 }, // 手机上只看得到中间这一段，所以中间也放一组
+  { x: 930, y: 48, delay: 6 },
+];
+---
+<div class="forest" role="img" aria-label="The Forbidden Forest · 禁林">
+  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g class="trees-back">{trees.filter((t) => t.back).map((t) => <path d={t.d} />)}</g>
+    <g class="trees-front">{trees.filter((t) => !t.back).map((t) => <path d={t.d} />)}</g>
+    {eyes.map((e) => (
+      <g class="spider-eyes" transform={`translate(${e.x} ${e.y})`} style={`--delay:${e.delay}s`} data-find="creature:acromantula">
+        <rect class="hit" x="-16" y="-10" width="32" height="20" />
+        <circle cx="-4" cy="0" r="2.2" /><circle cx="4" cy="0" r="2.2" />
+        <circle cx="-8" cy="-2" r="1.2" /><circle cx="8" cy="-2" r="1.2" />
+        <circle cx="-10.5" cy="1.5" r="1" /><circle cx="10.5" cy="1.5" r="1" />
+        <circle cx="-6" cy="4" r=".9" /><circle cx="6" cy="4" r=".9" />
+      </g>
+    ))}
+    <rect class="thestral-spot" x={CLEARING[0] + 6} y="8" width={CLEARING[1] - CLEARING[0] - 12} height={H - 8} data-find="creature:thestral" />
+  </svg>
+  <span class="forest-sign" title="The Forbidden Forest · 禁林">The Forbidden Forest · 禁林 — out of bounds to all students</span>
+</div>

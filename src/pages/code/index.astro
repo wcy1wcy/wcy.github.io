@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import PotionLabel from '../../components/PotionLabel.astro';
+import Creature from '../../components/Creature.astro';
+import Find from '../../components/Find.astro';
+import { PROJECTS } from '../../data/code';
+import { SITE } from '../../config';
+---
+<Base title="Code" description="The Room of Requirement: small tools and scripts." wide decor>
+  <header class="page-head section-mast has-niffler has-find">
+    <Find id="spell:scourgify" icon="cobweb" label="A dusty cobweb · 角落里的蜘蛛网" size={40} class="find-corner cobweb-corner" />
+    <span class="eyebrow">Code · 代码 — <em>The Room of Requirement</em></span>
+    <h1 class="page-title">Room of Requirement<span class="zh">有求必应屋</span></h1>
+    <p class="page-lede">
+      需要什么，它就出现什么。这里放我顺手写的小工具，每一瓶都可以直接看源码、复制或者下载。
+      {SITE.links.github && <>更多在 <a href={SITE.links.github} target="_blank" rel="noopener">GitHub ↗</a>。</>}
+    </p>
+    <!-- 嗅嗅：藏在分隔线后面，点它一下试试 -->
+    <button class="niffler-peek" type="button" data-niffler data-find="creature:niffler" aria-label="Niffler · 嗅嗅" title="Niffler · 嗅嗅">
+      <Creature kind="niffler" size={58} />
+    </button>
+  </header>
+  {PROJECTS.length ? (
+    <div class="shelf">
+      {PROJECTS.map((p, i) => <PotionLabel project={p} no={PROJECTS.length - i} />)}
+    </div>
+  ) : <p class="empty">The room is empty. Walk past it three times and think harder.</p>}
+</Base>

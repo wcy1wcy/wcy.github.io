@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import PubItem from '../components/PubItem.astro';
+import CopyScript from '../components/CopyScript.astro';
+import Find from '../components/Find.astro';
+import { SITE } from '../config';
+import { parseBibtex } from '../lib/bibtex';
+import bib from '../data/publications.bib?raw';
+
+const pubs = parseBibtex(bib);
+const years = [...new Set(pubs.map((p) => p.year))].sort((a, b) => b - a);
+---
+<Base title="Research" description={`Publications of ${SITE.name}`}>
+  <header class="page-head">
+    <span class="eyebrow">Research · 研究 — <em>The Restricted Section</em></span>
+    <h1 class="page-title">Research<span class="zh">研究</span><Find id="spell:alohomora" icon="padlock" label="A locked padlock · 禁书区的锁" size={30} class="title-find" /></h1>
+    <p class="page-lede">
+      My research interests include {SITE.interests.join(', ')}.
+      <span class="aside">禁书区的书都可以随便看，不需要教授签字的借书条。</span>
+      {SITE.links.scholar && <>A complete list is on <a href={SITE.links.scholar} target="_blank" rel="noopener">Google Scholar</a>.</>}
+    </p>
+  </header>
+
+  {years.map((y) => (
+    <section class="pub-year">
+      <h2>{y || '—'}</h2>
+      <ul class="pubs">{pubs.filter((p) => p.year === y).map((p) => <PubItem pub={p} />)}</ul>
+    </section>
+  ))}
+  {pubs.length === 0 && <p class="empty">The shelves are still empty.</p>}
+  <CopyScript />
+</Base>

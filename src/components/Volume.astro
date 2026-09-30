@@ -1,0 +1,7 @@
+---
+interface Props { level: number }
+const { level } = Astro.props;
+---
+<span class="volume" title={`音量 ${level}/3`} aria-label={`volume ${level} of 3`}>
+  {[1, 2, 3].map((i) => <i class={i <= level ? 'on' : ''} />)}
+</span>

@@ -1,0 +1,29 @@
+---
+// 代码卡片，做成魔药瓶标签的样子
+import type { Project } from '../data/code';
+import { readFiles, fmtMonth } from '../lib/code';
+interface Props { project: Project; no: number; compact?: boolean }
+const { project: p, no, compact = false } = Astro.props;
+const files = readFiles(p);
+const lines = files.reduce((s, f) => s + f.lines, 0);
+---
+<a class:list={['potion', { compact }]} href={`/code/${p.slug}/`}>
+  <div class="potion-top">
+    <span>No. {String(no).padStart(2, '0')}</span>
+    <span>{p.lang}</span>
+  </div>
+  <div class="potion-name">{p.name}</div>
+  {(p.nameZh || p.potion) && (
+    <div class="potion-sub">{p.nameZh}{p.nameZh && p.potion && ' · '}{p.potion && <em>{p.potion}</em>}</div>
+  )}
+  <p class="potion-sum">{p.summary}</p>
+  {!compact && (
+    <dl class="potion-facts">
+      <div><dt>Ingredients</dt><dd>{files.length} file{files.length > 1 ? 's' : ''} · {lines} lines</dd></div>
+      <div><dt>Brewed</dt><dd>{fmtMonth(p.date)}</dd></div>
+      {p.effect && <div class="wide"><dt>Effect</dt><dd>{p.effect}</dd></div>}
+    </dl>
+  )}
+  {!compact && p.warning && <div class="potion-warn">⚠ {p.warning}</div>}
+  {p.example && <span class="potion-example">示例</span>}
+</a>

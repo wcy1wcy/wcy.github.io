@@ -1,0 +1,97 @@
+---
+import Base from '../layouts/Base.astro';
+import WorldMap from '../components/WorldMap.astro';
+import TrendChart from '../components/TrendChart.astro';
+import BarList from '../components/BarList.astro';
+import VisitCount from '../components/VisitCount.astro';
+import { STATS, summary, fmtNum } from '../lib/stats';
+import { SITE } from '../config';
+
+const s = summary();
+const fmtDay = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+---
+<Base title="Map" description="The Marauder's Map: where visitors come from." wide decor>
+  <header class="page-head section-mast">
+    <span class="eyebrow">Map · 访客 — <em>The Marauder’s Map</em></span>
+    <h1 class="page-title">Marauder’s Map<span class="zh">活点地图</span></h1>
+    <p class="page-lede">
+      这张地图记录着每一位来访者从哪里来。不用 cookie，不记录你是谁，只数脚印。
+    </p>
+  </header>
+
+  {STATS.sample && (
+    <p class="notice">
+      <b>示例数据</b> 网站还没有公开，这里的数字都是编的，只用来展示效果。
+      上线并设置好 GoatCounter 之后，每天会自动换成真实数据。
+    </p>
+  )}
+
+  <div class="tiles">
+    <div class="tile">
+      <span class="tile-label">{SITE.goatcounter ? '总访问量 · All time' : `访客 · Last ${STATS.range.days} days`}</span>
+      <span class="tile-value"><VisitCount /></span>
+    </div>
+    <div class="tile">
+      <span class="tile-label">近 30 天 · Last 30 days</span>
+      <span class="tile-value">{fmtNum(s.last30)}</span>
+      {s.change !== null && <span class="tile-note">{s.change >= 0 ? '↑' : '↓'} {Math.abs(s.change)}% vs previous 30 days</span>}
+    </div>
+    <div class="tile">
+      <span class="tile-label">国家和地区 · Places</span>
+      <span class="tile-value">{s.places}</span>
+      {s.top && <span class="tile-note">most from {s.top.name}</span>}
+    </div>
+    <div class="tile">
+      <span class="tile-label">最多来自 · Top referrer</span>
+      <span class="tile-value tile-text">{s.topRef?.name ?? '—'}</span>
+      {s.topRef && <span class="tile-note">{fmtNum(s.topRef.count)} visitors</span>}
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Footprints<span class="zh">访客从哪里来</span></h2>
+      <span class="head-note">{fmtDay(STATS.range.start)} – {fmtDay(STATS.range.end)}</span>
+    </div>
+    <WorldMap />
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Daily visitors<span class="zh">每日访客</span></h2>
+      <span class="head-note">last {STATS.range.days} days</span>
+    </div>
+    <TrendChart daily={STATS.daily} />
+    <details class="table-view">
+      <summary>查看每日数据表格</summary>
+      <table>
+        <thead><tr><th>Date</th><th>Visitors</th></tr></thead>
+        <tbody>{[...STATS.daily].reverse().map((d) => <tr><td>{d.day}</td><td>{fmtNum(d.count)}</td></tr>)}</tbody>
+      </table>
+    </details>
+  </section>
+
+  <div class="two-col">
+    <section class="section">
+      <div class="section-head"><h2>Places<span class="zh">国家和地区</span></h2></div>
+      <BarList items={STATS.countries.slice(0, 10).map((c) => ({ label: c.name, count: c.count }))} />
+    </section>
+    <section class="section">
+      <div class="section-head"><h2>Came from<span class="zh">来源网站</span></h2></div>
+      <BarList items={STATS.referrers.slice(0, 10).map((r) => ({ label: r.name, count: r.count }))} />
+    </section>
+  </div>
+
+  {STATS.pages.length > 0 && (
+    <section class="section">
+      <div class="section-head"><h2>Most visited<span class="zh">最常被翻开的页面</span></h2></div>
+      <BarList items={STATS.pages.slice(0, 8).map((p) => ({ label: p.title, count: p.count, href: p.path }))} />
+    </section>
+  )}
+
+  <p class="fineprint">
+    统计由 <a href="https://www.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> 提供，不使用 cookie，不收集个人信息。
+    地图和排行每天更新一次，最近更新：{fmtDay(STATS.updated)}。
+    <span class="invisible-ink">Messrs. Moony, Wormtail, Padfoot and Prongs 向你问好。</span>
+  </p>
+</Base>

@@ -1,0 +1,225 @@
+---
+import Base from '../layouts/Base.astro';
+import PubItem from '../components/PubItem.astro';
+import CopyScript from '../components/CopyScript.astro';
+import Creature from '../components/Creature.astro';
+import HuntGame from '../components/HuntGame.astro';
+import WaxSeal from '../components/WaxSeal.astro';
+import Portrait from '../components/Portrait.astro';
+import MovingPhoto from '../components/MovingPhoto.astro';
+import PotionLabel from '../components/PotionLabel.astro';
+import WorldMap from '../components/WorldMap.astro';
+import VisitCount from '../components/VisitCount.astro';
+import { SITE } from '../config';
+import { NEWS, CLASSIFIEDS } from '../data/news';
+import { PROJECTS } from '../data/code';
+import { parseBibtex } from '../lib/bibtex';
+import { getPosts, getHeadline, firstParagraph } from '../lib/posts';
+import { readingMinutes } from '../lib/readingTime';
+import { fmtDate, fmtDateShort } from '../lib/format';
+import { STATS } from '../lib/stats';
+import bib from '../data/publications.bib?raw';
+
+const pubs = parseBibtex(bib);
+const selected = (pubs.some((p) => p.selected) ? pubs.filter((p) => p.selected) : pubs).slice(0, 4);
+
+const lead = await getHeadline();
+const moreBlog = (await getPosts('blog')).filter((p) => p.id !== lead?.id).slice(0, 3);
+const life = (await getPosts('life')).slice(0, 4);
+
+// 报头：期号 = 创刊以来第几天（打开网页时会用今天的日期重新算）
+const founded = new Date(SITE.founded + 'T00:00:00');
+const now = new Date();
+const issue = Math.max(1, Math.floor((now.valueOf() - founded.valueOf()) / 864e5) + 1);
+const volume = Math.max(1, now.getFullYear() - founded.getFullYear() + 1);
+const roman = (n: number) => ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][n - 1] ?? String(n);
+const longDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+// 报头右边的“天气预报”，每天换一句
+const WEATHER = [
+  ['Fog over the Black Lake; the Giant Squid is sunbathing.', '黑湖起雾，大乌贼在晒太阳'],
+  ['Light drizzle of owls. Bring a hat.', '小雨，偶有猫头鹰'],
+  ['Unseasonably warm in the Slytherin common room.', '公共休息室里异常暖和'],
+  ['High chance of deadlines. Stay indoors.', '截稿概率很高，宜在室内'],
+  ['Clear skies. Excellent night for Astronomy.', '晴，适合上天文课'],
+  ['Strange noises from the Forbidden Forest.', '禁林里传来奇怪的声音'],
+  ['Mild, with scattered epiphanies.', '温和，零星灵感'],
+];
+
+const L = SITE.links;
+const links = [
+  L.email && { label: 'Email', href: `mailto:${L.email}` },
+  L.scholar && { label: 'Scholar', href: L.scholar },
+  L.orcid && { label: 'ORCID', href: L.orcid },
+  L.github && { label: 'GitHub', href: L.github },
+  L.twitter && { label: 'X', href: L.twitter },
+  SITE.cv && { label: 'CV', href: SITE.cv },
+].filter(Boolean) as { label: string; href: string }[];
+---
+<Base wide decor bodyClass="page-home">
+  <header class="masthead" data-founded={SITE.founded}>
+    <div class="mast-bar">
+      <span>Vol. {roman(volume)} · No. <b data-issue>{issue}</b></span>
+      <span data-today>{longDate(now)}</span>
+      <span>Price: one Knut · 免费</span>
+    </div>
+    <div class="mast-row">
+      <div class="mast-ear left">
+        <WaxSeal size={58} />
+        <span>Est. {founded.getFullYear()}</span>
+      </div>
+      <!-- 小游戏：报名里的 Quill（羽毛笔）藏着悬浮咒 -->
+      <h1 class="mast-title" data-find="spell:wingardiumleviosa" title="The Evening Quill">{SITE.paperName}</h1>
+      <div class="mast-ear right">
+        <span class="ear-label">Weather</span>
+        <span data-weather data-options={JSON.stringify(WEATHER)}>{WEATHER[issue % WEATHER.length][0]}<small>{WEATHER[issue % WEATHER.length][1]}</small></span>
+      </div>
+    </div>
+    <div class="mast-sub">
+      <span class="zh">{SITE.paperNameZh} · {SITE.nameZh}的个人小报</span>
+      <em>{SITE.tagline}</em>
+    </div>
+    <nav class="mast-index" aria-label="In this issue">
+      <span>In this issue</span>
+      <a href="/blog/">The Gazette</a>
+      <a href="/code/">Room of Requirement</a>
+      <a href="/life/">Pensieve & Howlers</a>
+      <a href="/map/">Marauder’s Map</a>
+      <a href="/research/">Restricted Section</a>
+    </nav>
+  </header>
+
+  <HuntGame />
+
+  <section class="front">
+    {lead ? (
+      <article class="lead">
+        <span class="kicker">头条 · {lead.data.kicker ?? 'The Gazette'}</span>
+        <h2 class="lead-headline"><a href={`/blog/${lead.id}/`}>{lead.data.title}</a></h2>
+        {lead.data.description && <p class="lead-dek">{lead.data.description}</p>}
+        <div class="gz-byline">By {SITE.name} · <time datetime={lead.data.date.toISOString()}>{fmtDate(lead.data.date)}</time> · {readingMinutes(lead.body)} min brew</div>
+        <div class="lead-body">
+          <MovingPhoto src={lead.data.cover} />
+          <div>
+            <p class="lead-excerpt dropcap">{firstParagraph(lead.body, 300)}</p>
+            <a class="continued" href={`/blog/${lead.id}/`}>Continued on page 2 · 阅读全文 →</a>
+          </div>
+        </div>
+      </article>
+    ) : (
+      <article class="lead">
+        <span class="kicker">头条 · The Gazette</span>
+        <h2 class="lead-headline">{SITE.name} opens a small corner of the internet</h2>
+        <p class="lead-dek">{SITE.tagline}</p>
+      </article>
+    )}
+
+    <aside class="editor">
+      <h2 class="col-head">From the Editor<span>关于我</span></h2>
+      <Portrait size="7.5rem" />
+      <div class="editor-meta">{SITE.affiliation}</div>
+      <div class="intro">{SITE.intro.map((p) => <p set:html={p} />)}</div>
+      <ul class="chips">{SITE.interests.map((i) => <li>{i}</li>)}</ul>
+      <ul class="links">
+        {links.map((l) => <li><a href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noopener">{l.label} ↗</a></li>)}
+      </ul>
+    </aside>
+  </section>
+
+  <div class="rule-double" role="presentation"></div>
+
+  <section class="grid3">
+    <div class="col">
+      <h2 class="col-head">
+        <button class="owl-find" type="button" data-find="creature:owl" aria-label="Owl · 猫头鹰" title="Owl · 猫头鹰"><Creature kind="owl" size={24} class="head-owl" /></button>
+        Owl Post<span>猫头鹰邮报 · 近况</span>
+      </h2>
+      <ul class="news">
+        {NEWS.map((n) => <li><time>{n.date}</time><span set:html={n.text} /></li>)}
+      </ul>
+      {moreBlog.length > 0 && (
+        <>
+          <h2 class="col-head">Also in the Gazette<span>更多文章</span></h2>
+          <ul class="brief-list">
+            {moreBlog.map((p) => (
+              <li>
+                <a href={`/blog/${p.id}/`}>
+                  <span class="t">{p.data.title}</span>
+                  {p.data.description && <span class="d">{p.data.description}</span>}
+                  <time datetime={p.data.date.toISOString()}>{fmtDateShort(p.data.date)}</time>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+
+    <div class="col">
+      <h2 class="col-head"><a href="/code/">Room of Requirement</a><span>最新代码</span></h2>
+      <div class="shelf compact">
+        {PROJECTS.slice(0, 2).map((p, i) => <PotionLabel project={p} no={PROJECTS.length - i} compact />)}
+      </div>
+      <h2 class="col-head"><a href="/life/">Pensieve & Howlers</a><span>日常</span></h2>
+      <ul class="brief-list">
+        {life.map((p) => (
+          <li class:list={{ howl: p.data.volume }}>
+            <a href={`/life/${p.id}/`}>
+              <span class="k">{p.data.volume ? 'Howler' : 'Pensieve'}</span>
+              <span class="t">{p.data.title}</span>
+              <time datetime={p.data.date.toISOString()}>{fmtDateShort(p.data.date)}</time>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="col">
+      <h2 class="col-head"><a href="/map/">Marauder’s Map</a><span>活点地图</span></h2>
+      <WorldMap mini />
+      <p class="map-caption">
+        <b><VisitCount /></b> visitors from <b>{STATS.countries.length}</b> countries and regions have left footprints here
+        {STATS.sample && <span class="sample-tag">示例数据</span>}
+      </p>
+      <a class="continued" href="/map/">Open the map · 展开活点地图 →</a>
+      {(
+        <>
+          <h2 class="col-head">Classifieds<span>分类广告</span></h2>
+          <ul class="classifieds">
+            {CLASSIFIEDS.map((c) => <li><b>{c.title}</b> <span set:html={c.text} /></li>)}
+            <li><b>LOST.</b> <span>One semicolon, last seen near line 42. Have you tried <button class="find-word" type="button" data-find="spell:accio">Accio</button>（飞来）?</span></li>
+          </ul>
+        </>
+      )}
+    </div>
+  </section>
+
+  <div class="rule-double" role="presentation"></div>
+
+  <section class="restricted">
+    <h2 class="col-head"><a href="/research/">From the Restricted Section</a><span>代表作</span></h2>
+    <ul class="pubs two">{selected.map((p) => <PubItem pub={p} showYear />)}</ul>
+  </section>
+  <CopyScript />
+</Base>
+
+<script>
+  // 静态网页是提前生成的，所以打开时用今天的日期更新报头
+  const mast = document.querySelector<HTMLElement>('.masthead');
+  if (mast) {
+    const founded = new Date(mast.dataset.founded + 'T00:00:00');
+    const now = new Date();
+    const issue = Math.max(1, Math.floor((now.valueOf() - founded.valueOf()) / 864e5) + 1);
+    mast.querySelector('[data-issue]')!.textContent = String(issue);
+    mast.querySelector('[data-today]')!.textContent = now.toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const w = mast.querySelector<HTMLElement>('[data-weather]')!;
+    const opts: [string, string][] = JSON.parse(w.dataset.options!);
+    const [en, zh] = opts[issue % opts.length];
+    w.textContent = en;
+    const small = document.createElement('small');
+    small.textContent = zh;
+    w.append(small);
+  }
+</script>

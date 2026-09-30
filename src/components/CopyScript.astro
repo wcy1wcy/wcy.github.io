@@ -1,0 +1,22 @@
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-bib]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const pre = b.closest('.pub')!.querySelector<HTMLElement>('.bib')!;
+      pre.hidden = !pre.hidden;
+      b.setAttribute('aria-expanded', String(!pre.hidden));
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      const pre = b.parentElement!;
+      const text = (pre.textContent || '').replace(b.textContent || '', '').trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        b.textContent = 'Copied';
+      } catch {
+        b.textContent = 'Select & copy';
+      }
+      setTimeout(() => (b.textContent = 'Copy'), 1600);
+    });
+  });
+</script>

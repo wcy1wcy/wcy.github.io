@@ -1,0 +1,23 @@
+---
+import { render } from 'astro:content';
+import Post from '../../layouts/Post.astro';
+import { getPosts } from '../../lib/posts';
+import { readingMinutes } from '../../lib/readingTime';
+
+export async function getStaticPaths() {
+  const posts = await getPosts('blog');
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      prev: posts[i - 1] && { href: `/blog/${posts[i - 1].id}/`, title: posts[i - 1].data.title },
+      next: posts[i + 1] && { href: `/blog/${posts[i + 1].id}/`, title: posts[i + 1].data.title },
+    },
+  }));
+}
+const { post, prev, next } = Astro.props;
+const { Content } = await render(post);
+---
+<Post kind="blog" {...post.data} minutes={readingMinutes(post.body)} prev={prev} next={next}>
+  <Content />
+</Post>

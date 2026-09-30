@@ -1,0 +1,15 @@
+---
+// “会动的肖像”：鼠标移上去，画里的人会轻轻动一下。
+// 头像放到 public/images/avatar.jpg，然后在 src/config.ts 里把 avatar 改成 '/images/avatar.jpg'
+import { SITE } from '../config';
+interface Props { size?: string; caption?: boolean }
+const { size = '9rem', caption = true } = Astro.props;
+---
+<figure class="moving-portrait" style={`--pw:${size}`}>
+  <div class="frame" tabindex="0" aria-label={`Portrait of ${SITE.name}`}>
+    <div class="subject">
+      {SITE.avatar ? <img src={SITE.avatar} alt={SITE.name} /> : <span class="initial" aria-hidden="true">{SITE.nameZh.slice(0, 1)}</span>}
+    </div>
+  </div>
+  {caption && <figcaption>{SITE.name}<span>— sits for portraits, rarely</span></figcaption>}
+</figure>

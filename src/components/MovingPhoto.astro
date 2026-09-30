@@ -1,0 +1,26 @@
+---
+// 巫师报纸上的照片是会动的：有封面图时，图片会极慢地推近、平移。
+// 没有封面图时，放一块原创的羊皮纸插画占位。
+import WaxSeal from './WaxSeal.astro';
+interface Props { src?: string; caption?: string }
+const { src, caption } = Astro.props;
+---
+<figure class="moving-photo">
+  <div class="mp-frame">
+    {src ? (
+      <img src={src} alt="" loading="lazy" />
+    ) : (
+      <div class="mp-pending" aria-hidden="true">
+        <svg class="mp-engraving" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice">
+          <g fill="none" stroke="currentColor" stroke-linecap="round">
+            {Array.from({ length: 9 }, (_, i) => (
+              <path d={`M-20 ${40 + i * 20} C 80 ${20 + i * 20 + (i % 2) * 18}, 180 ${70 + i * 18}, 260 ${36 + i * 20} S 380 ${60 + i * 19}, 430 ${30 + i * 21}`} stroke-width={0.6 + (i % 3) * 0.25} opacity={0.25 + (i % 4) * 0.08} />
+            ))}
+          </g>
+        </svg>
+        <WaxSeal size={64} />
+      </div>
+    )}
+  </div>
+  {(caption || !src) && <figcaption>{caption ?? 'Photograph pending — the subject refused to hold still.'}</figcaption>}
+</figure>

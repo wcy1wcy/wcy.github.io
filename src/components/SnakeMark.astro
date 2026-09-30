@@ -1,0 +1,9 @@
+---
+// 小号的蛇形标志，用在站名和页脚
+interface Props { size?: number }
+const { size = 22 } = Astro.props;
+---
+<svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M15.5 5.2C9 3.6 5.2 7.4 8.6 10.6s8.3 3.4 7.4 7.1c-.8 3.2-6 3.5-10 1.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+  <ellipse cx="17.6" cy="5.6" rx="2.6" ry="1.9" transform="rotate(12 17.6 5.6)" fill="currentColor" />
+</svg>

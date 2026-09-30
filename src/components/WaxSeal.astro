@@ -1,0 +1,27 @@
+---
+// 原创火漆印章。tone: green（斯莱特林）或 red（吼叫信）。中间默认是小蛇，也可以放一个字。
+interface Props { size?: number; tone?: 'green' | 'red'; glyph?: string; class?: string; title?: string }
+const { size = 56, tone = 'green', glyph, class: cls = '', title } = Astro.props;
+const id = `seal-${Math.random().toString(36).slice(2, 8)}`;
+---
+<svg class:list={['wax-seal', `wax-${tone}`, cls]} width={size} height={size} viewBox="0 0 64 64" role={title ? 'img' : undefined} aria-label={title} aria-hidden={title ? undefined : 'true'}>
+  <defs>
+    <radialGradient id={`${id}-g`} cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="var(--wax-hi)" />
+      <stop offset=".55" stop-color="var(--wax)" />
+      <stop offset="1" stop-color="var(--wax-lo)" />
+    </radialGradient>
+  </defs>
+  <!-- 蜡滴的不规则边缘 -->
+  <path fill={`url(#${id}-g)`} d="M32 2.5c4.2 0 6.3 2.6 9.8 3.4 3.8.9 7.2-.4 10 2.3 2.7 2.6 1.6 6.4 3.2 9.6 1.5 3.1 5.1 5.1 5.1 9.2 0 4-2.8 6-3.4 9.6-.6 3.9 1.2 7.2-1.6 10.1-2.8 2.9-6.6 1.9-10 3.4-3.2 1.4-5.2 5.2-9.4 5.4-4.1.2-6.3-3.1-9.9-3.9-3.7-.8-7.3.9-10.2-1.8-2.9-2.7-1.4-6.6-2.9-9.9-1.4-3.1-5.3-5-5.3-9.1 0-4 3.4-6 4.1-9.5.8-3.6-.8-7 1.9-9.8 2.8-2.9 6.7-1.9 10.2-3.4C26 5.4 27.9 2.5 32 2.5z" />
+  <circle cx="32" cy="32" r="18.5" fill="none" stroke="var(--wax-lo)" stroke-width="1.6" opacity=".75" />
+  <circle cx="32" cy="32" r="16" fill="none" stroke="var(--wax-hi)" stroke-width=".8" opacity=".5" />
+  {glyph ? (
+    <text x="32" y="33" text-anchor="middle" dominant-baseline="central" font-family="EB Garamond, Georgia, serif" font-size="20" font-style="italic" fill="var(--wax-lo)">{glyph}</text>
+  ) : (
+    <g fill="none" stroke="var(--wax-lo)" stroke-width="2.2" stroke-linecap="round">
+      <path d="M36.5 22.8c-6.8-1.6-10.8 2.4-7.2 5.7s8.7 3.6 7.8 7.5c-.8 3.4-6.3 3.7-10.5 1.7" />
+      <ellipse cx="38.7" cy="23.2" rx="2.7" ry="2" transform="rotate(12 38.7 23.2)" fill="var(--wax-lo)" stroke="none" />
+    </g>
+  )}
+</svg>

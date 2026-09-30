@@ -1,0 +1,68 @@
+---
+import { Code } from 'astro:components';
+import Base from '../../layouts/Base.astro';
+import { PROJECTS } from '../../data/code';
+import { readFiles, fmtMonth } from '../../lib/code';
+
+export function getStaticPaths() {
+  return PROJECTS.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+const { project: p } = Astro.props;
+const files = readFiles(p);
+const kb = (b: number) => (b < 1024 ? `${b} B` : `${(b / 1024).toFixed(1)} KB`);
+---
+<Base title={p.name} description={p.summary}>
+  <header class="post-head">
+    <a class="eyebrow" href="/code/"><em>Room of Requirement · 代码</em></a>
+    <h1 class="post-title">{p.name}{p.nameZh && <span class="zh">{p.nameZh}</span>}</h1>
+    <p class="post-dek">{p.summary}</p>
+    <div class="post-meta">
+      <span>{p.lang}</span>
+      <span>{fmtMonth(p.date)}</span>
+      {p.potion && <span class="brew"><em>{p.potion}</em></span>}
+      {p.example && <span class="howler-note">示例项目</span>}
+    </div>
+    {p.tags && p.tags.length > 0 && <ul class="tags">{p.tags.map((t) => <li>{t}</li>)}</ul>}
+    <div class="code-actions">
+      {files.length === 1 && <a class="btn" href={files[0].href} download>下载 {files[0].name} ↓</a>}
+      {p.github && <a class="btn btn-ghost" href={p.github} target="_blank" rel="noopener">GitHub ↗</a>}
+    </div>
+  </header>
+
+  {p.description && <div class="prose"><p set:html={p.description} /></div>}
+
+  {files.map((f) => (
+    <section class="code-file">
+      <div class="code-file-head">
+        <span class="code-file-name">{f.name}</span>
+        <span class="code-file-meta">{f.lines} lines · {kb(f.bytes)}</span>
+        <span class="code-file-btns">
+          <button class="btn-sm" type="button" data-copy-code>Copy</button>
+          <a class="btn-sm" href={f.href} download>Download</a>
+        </span>
+      </div>
+      <Code code={f.code} lang={f.lang as any} themes={{ light: 'github-light', dark: 'github-dark-dimmed' }} />
+    </section>
+  ))}
+
+  {p.warning && <p class="potion-warn standalone">⚠ {p.warning}</p>}
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-code]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      const pre = b.closest('.code-file')!.querySelector('pre')!;
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        b.textContent = 'Copied ✓';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(pre);
+        getSelection()?.removeAllRanges();
+        getSelection()?.addRange(range);
+        b.textContent = '已选中，按 ⌘C';
+      }
+      setTimeout(() => (b.textContent = 'Copy'), 1800);
+    });
+  });
+</script>

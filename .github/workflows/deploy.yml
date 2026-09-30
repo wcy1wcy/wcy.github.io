@@ -1,0 +1,50 @@
+# 推送到 main 分支后自动构建并发布到 GitHub Pages。
+# 另外每天自动重新构建一次：拉取 GoatCounter 的访客数据，更新“活点地图”和首页报头的日期。
+# GitHub 仓库 → Settings → Pages → Source 需要选 “GitHub Actions”。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 20 * * *' # 每天 UTC 20:17（北京时间凌晨 4:17）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # 拉取访客统计。没设置 GOATCOUNTER_CODE / GOATCOUNTER_TOKEN 时会自动跳过
+      - run: node scripts/fetch-stats.mjs
+        env:
+          GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

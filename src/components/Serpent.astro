@@ -1,0 +1,13 @@
+---
+// 原创小蛇分隔线。悬停时会吐信子。
+interface Props { width?: number; class?: string }
+const { width = 120, class: cls = 'serpent' } = Astro.props;
+---
+<div class={cls} aria-hidden="true" title="Basilisk · 蛇怪（很小的一只，不用怕）" data-find="creature:basilisk">
+  <svg width={width} height={width / 5} viewBox="0 0 120 24" fill="none">
+    <path d="M4 14C16 4 28 4 40 12S64 22 76 12 94 6 101 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+    <ellipse cx="106" cy="10" rx="5.5" ry="3.6" fill="currentColor" />
+    <circle cx="108" cy="9" r="0.9" fill="var(--bg)" />
+    <path class="tongue" d="M111 10h5m0 0l3-2m-3 2l3 2" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+  </svg>
+</div>

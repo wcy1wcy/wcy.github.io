@@ -1,0 +1,318 @@
+---
+// 咒语引擎：在页面任何地方打字施咒，或者点带 data-cast 的按钮。
+// 还负责偶尔飘过的幽灵、守护神，以及代码页的嗅嗅。咒语列表在 src/data/magic.ts。
+import Creature from './Creature.astro';
+import { getPosts } from '../lib/posts';
+import { PROJECTS } from '../data/code';
+import { HUNT, huntName } from '../data/magic';
+
+// Accio 能召唤到的东西
+const targets = [
+  ...(await getPosts('blog')).map((p) => ({ href: `/blog/${p.id}/`, title: p.data.title })),
+  ...(await getPosts('life')).map((p) => ({ href: `/life/${p.id}/`, title: p.data.title })),
+  ...PROJECTS.map((p) => ({ href: `/code/${p.slug}/`, title: p.name })),
+];
+---
+<div class="ghost-wander" data-ghost hidden>
+  <button class="ghost-btn" type="button" aria-label="A ghost drifts by">
+    <Creature kind="ghost" size={52} />
+  </button>
+  <div class="ghost-card" role="tooltip"><b></b><span></span><small></small></div>
+</div>
+<div class="patronus" data-patronus hidden><Creature kind="hare" size={64} /></div>
+<script type="application/json" id="accio-targets" set:html={JSON.stringify(targets)} />
+
+<!-- 小游戏：左下角的收集进度，点开是收集册 -->
+<button class="hunt-chip" type="button" data-hunt-open aria-label="Open your collection">
+  <span class="spark" aria-hidden="true">✦</span> <b data-hunt-count>0</b>/{HUNT.length}
+</button>
+<div class="hunt-pop" role="status" aria-live="polite" hidden>
+  <span class="hp-kicker">✦ New discovery · 新发现</span>
+  <span class="hp-name"></span>
+  <span class="hp-meta"></span>
+  <button class="btn-sm" type="button" data-hunt-open>查看收集册</button>
+</div>
+<dialog class="hunt-dialog" aria-labelledby="hunt-title">
+  <div class="hd-head">
+    <div>
+      <span class="eyebrow">Your collection · 我的收集册</span>
+      <h2 id="hunt-title">已找到 <b data-hunt-count>0</b> / {HUNT.length}</h2>
+      <p class="hd-grade">O.W.L. 成绩：<b data-hunt-grade>Troll · 巨怪</b></p>
+    </div>
+    <button class="btn-sm" type="button" data-hunt-close aria-label="Close">关闭 ✕</button>
+  </div>
+  {(['spell', 'creature'] as const).map((type) => (
+    <section>
+      <h3>{type === 'spell' ? 'Spells · 咒语' : 'Creatures · 神奇生物'} <span data-hunt-type-count={type}></span></h3>
+      <ul class="hd-list">
+        {HUNT.filter((h) => h.type === type).map((h) => {
+          const n = huntName(h);
+          return (
+            <li data-hunt-item={h.id}>
+              <span class="hd-found"><b>{n.en}</b><span class="zh">{n.zh}</span><small>找到于：{h.where}</small></span>
+              <span class="hd-locked"><b>? ? ?</b><small>线索：{h.hint}</small></span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  ))}
+  <div class="hd-foot">
+    <a href="/spells/">打开咒语书 The Standard Book of Spells →</a>
+    <button class="btn-sm" type="button" data-hunt-reset>Obliviate · 清空我的收集记录</button>
+  </div>
+</dialog>
+
+<script>
+  import { SPELLS, PASSWORDS, GHOSTS, HUNT, huntName, gradeFor } from '../data/magic';
+
+  const body = document.body;
+  const site = () => (window as any).__site as {
+    toast: (html: string, ms?: number) => void;
+    setTheme: (t: 'light' | 'dark') => void;
+    forgetTheme: () => void;
+  };
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const spell = (key: string) => SPELLS.find((s) => s.key === key)!;
+  const say = (key: string, msg: string) => {
+    const s = spell(key);
+    site().toast(`<b>${s.words}</b> · ${s.zh}<span>${msg}</span>`, 3400);
+  };
+  const timers: Record<string, number> = {};
+  const flash = (cls: string, ms: number) => {
+    body.classList.remove(cls);
+    void body.offsetWidth;
+    body.classList.add(cls);
+    clearTimeout(timers[cls]);
+    timers[cls] = window.setTimeout(() => body.classList.remove(cls), ms);
+  };
+
+  // ── 幽灵 ──
+  const ghostEl = document.querySelector<HTMLElement>('[data-ghost]')!;
+  const ghostCard = ghostEl.querySelector<HTMLElement>('.ghost-card')!;
+  let currentGhost = GHOSTS[0];
+  function summonGhost(key?: string) {
+    currentGhost = GHOSTS.find((g) => g.key === key) ?? GHOSTS[Math.floor(Math.random() * GHOSTS.length)];
+    ghostCard.querySelector('b')!.textContent = currentGhost.name;
+    ghostCard.querySelector('span')!.textContent = currentGhost.zh;
+    ghostCard.querySelector('small')!.textContent = currentGhost.house;
+    const ltr = Math.random() < 0.5;
+    ghostEl.style.setProperty('--gy', `${18 + Math.random() * 50}vh`);
+    ghostEl.classList.toggle('rtl', !ltr);
+    ghostEl.hidden = false;
+    ghostEl.classList.remove('drifting');
+    void ghostEl.offsetWidth;
+    ghostEl.classList.add('drifting');
+  }
+  ghostEl.addEventListener('animationend', (e) => {
+    if (e.target === ghostEl) ghostEl.hidden = true;
+  });
+  ghostEl.querySelector('button')!.addEventListener('click', () =>
+    site().toast(`<b>${currentGhost.name}</b> · ${currentGhost.zh}<span>${currentGhost.line}</span>`, 4200)
+  );
+
+  // 在装饰页面上，偶尔会有一只幽灵飘过（每次打开网站最多一次）
+  try {
+    if (body.classList.contains('decor') && !reduced && !sessionStorage.getItem('ghost-seen') && Math.random() < 0.45) {
+      sessionStorage.setItem('ghost-seen', '1');
+      setTimeout(() => summonGhost(), 12000 + Math.random() * 18000);
+    }
+  } catch {}
+
+  // ── 守护神 ──
+  const patronus = document.querySelector<HTMLElement>('[data-patronus]')!;
+  patronus.addEventListener('animationend', () => (patronus.hidden = true));
+
+  // ── 嗅嗅（代码页） ──
+  let galleons = 0;
+  document.querySelectorAll<HTMLElement>('[data-niffler]').forEach((n) =>
+    n.addEventListener('click', () => {
+      galleons++;
+      n.classList.remove('grab');
+      void n.offsetWidth;
+      n.classList.add('grab');
+      site().toast(
+        `<b>Niffler</b> · 嗅嗅<span>${galleons === 1 ? '它从你口袋里摸走了一枚金加隆（Galleon）。' : `它已经偷走了 ${galleons} 枚金加隆。还不快跑。`}</span>`,
+        3000
+      );
+    })
+  );
+
+  // ── 每条咒语的效果 ──
+  const effects: Record<string, () => void> = {
+    lumos: () => { site().setTheme('light'); say('lumos', '魔杖亮了。'); },
+    nox: () => { site().setTheme('dark'); say('nox', '欢迎来到斯莱特林公共休息室。窗外是黑湖。'); },
+    accio: () => {
+      const list: { href: string; title: string }[] = JSON.parse(document.getElementById('accio-targets')!.textContent || '[]');
+      const pool = list.filter((t) => t.href !== location.pathname);
+      if (!pool.length) return say('accio', '什么也没飞过来。');
+      const t = pool[Math.floor(Math.random() * pool.length)];
+      say('accio', `正在召唤：${t.title}`);
+      flash('accio', 1200);
+      setTimeout(() => (location.href = t.href), 1100);
+    },
+    wingardiumleviosa: () => { flash('leviosa', 5200); say('wingardiumleviosa', '标题飘起来了。是 Levi-O-sa，不是 Levio-SA。'); },
+    aparecium: () => {
+      body.classList.add('aparecium');
+      say('aparecium', document.querySelector('.invisible-ink') ? '隐形墨水写的字显出来了。' : '这一页没有藏字。换一页试试。');
+    },
+    homenumrevelio: () => { summonGhost(); say('homenumrevelio', '发现 1 个人：就是你。还有一个……不太算人的。'); },
+    expectopatronum: () => {
+      patronus.hidden = false;
+      patronus.classList.remove('running');
+      void patronus.offsetWidth;
+      patronus.classList.add('running');
+      say('expectopatronum', '一只银白色的守护神从页面上跑了过去。');
+    },
+    scourgify: () => {
+      if (!body.classList.contains('decor')) return say('scourgify', '这一页本来就很干净。');
+      body.classList.toggle('scourgified');
+      say('scourgify', body.classList.contains('scourgified') ? '羊皮纸上的污渍全擦掉了。' : '污渍又回来了。羊皮纸就是这样。');
+    },
+    riddikulus: () => { flash('riddikulus', 6000); say('riddikulus', '博格特变成了滑稽的样子。所有标题都在憋笑。'); },
+    expelliarmus: () => {
+      const wand = document.getElementById('spell-toggle');
+      wand?.classList.remove('disarmed');
+      void wand?.offsetWidth;
+      wand?.classList.add('disarmed');
+      say('expelliarmus', '你的魔杖飞出去了！别担心，它会自己飞回来。');
+    },
+    alohomora: () => {
+      const closed = [...document.querySelectorAll<HTMLDetailsElement>('details:not([open])')];
+      closed.forEach((d) => (d.open = true));
+      say('alohomora', closed.length ? `咔哒——打开了 ${closed.length} 处折叠的内容。` : '这扇门本来就没锁。');
+    },
+    reparo: () => {
+      document.getElementById('spell-toggle')?.classList.remove('disarmed');
+      say('reparo', location.pathname.includes('coffee-machine') ? '咖啡机修好了！……它又发出了那种很努力的声音。' : '一切恢复如初。');
+    },
+    obliviate: () => { site().forgetTheme(); flash('obliviate', 1500); say('obliviate', '你选过的主题被遗忘了，改回跟随系统。'); },
+    finiteincantatem: () => {
+      ['leviosa', 'riddikulus', 'aparecium', 'scourgified', 'obliviate'].forEach((c) => body.classList.remove(c));
+      ghostEl.hidden = true;
+      patronus.hidden = true;
+      say('finiteincantatem', '所有咒语都停下来了。');
+    },
+    isolemnlyswearthatiamuptonogood: () => {
+      const oath = document.querySelector<HTMLButtonElement>('[data-oath]');
+      if (oath) oath.click();
+      else location.href = '/map/#reveal';
+    },
+    mischiefmanaged: () => {
+      const managed = document.querySelector<HTMLButtonElement>('[data-managed]');
+      if (managed && !managed.hidden) managed.click();
+      const p = PASSWORDS[1];
+      site().toast(`<b>${p.words}</b> · ${p.zh}<span>地图又变回了一张空白的羊皮纸。</span>`, 3000);
+    },
+  };
+  const cast = (key: string) => effects[key]?.();
+
+  // ── 小游戏：收集咒语和神奇生物 ──
+  // 记录只存在访客自己的浏览器里（localStorage），存不了也不影响游戏，只是刷新后会忘。
+  const STORE = 'hogwarts-hunt-v1';
+  let found: Record<string, number> = {};
+  try { found = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(found)); } catch {} };
+  const total = HUNT.length;
+  const dialog = document.querySelector<HTMLDialogElement>('.hunt-dialog')!;
+  const pop = document.querySelector<HTMLElement>('.hunt-pop')!;
+  let popTimer: number | undefined;
+
+  function render() {
+    const n = HUNT.filter((h) => found[h.id]).length;
+    const g = gradeFor(n);
+    document.querySelectorAll('[data-hunt-count]').forEach((el) => (el.textContent = String(n)));
+    document.querySelectorAll('[data-hunt-grade]').forEach((el) => (el.textContent = `${g.en} · ${g.zh}`));
+    document.querySelectorAll<HTMLElement>('[data-hunt-bar]').forEach((el) => (el.style.width = `${(n / total) * 100}%`));
+    (['spell', 'creature'] as const).forEach((t) => {
+      const all = HUNT.filter((h) => h.type === t);
+      const got = all.filter((h) => found[h.id]).length;
+      document.querySelectorAll(`[data-hunt-type-count="${t}"]`).forEach((el) => (el.textContent = `${got}/${all.length}`));
+    });
+    document.querySelectorAll<HTMLElement>('[data-hunt-item]').forEach((el) => el.classList.toggle('found', !!found[el.dataset.huntItem!]));
+    document.querySelectorAll<HTMLElement>('[data-find]').forEach((el) => el.classList.toggle('found', !!found[el.dataset.find!]));
+    document.documentElement.classList.toggle('hunt-complete', n === total);
+  }
+
+  function collect(id: string) {
+    const item = HUNT.find((h) => h.id === id);
+    if (!item || found[id]) return;
+    found[id] = Date.now();
+    save();
+    render();
+    const n = HUNT.filter((h) => found[h.id]).length;
+    const name = huntName(item);
+    pop.querySelector('.hp-name')!.innerHTML = `<b></b> · <span></span>`;
+    pop.querySelector('.hp-name b')!.textContent = name.en;
+    pop.querySelector('.hp-name span')!.textContent = name.zh;
+    pop.querySelector('.hp-meta')!.textContent =
+      n === total
+        ? `全部 ${total} 项都找齐了！O.W.L. 成绩：Outstanding · 优秀`
+        : `${item.type === 'spell' ? '咒语' : '神奇生物'} · 已找到 ${n} / ${total} · ${gradeFor(n).en} · ${gradeFor(n).zh}`;
+    pop.hidden = false;
+    pop.classList.remove('show');
+    void pop.offsetWidth;
+    pop.classList.add('show');
+    clearTimeout(popTimer);
+    popTimer = window.setTimeout(() => pop.classList.remove('show'), n === total ? 8000 : 4600);
+    if (n === total) setTimeout(() => effects.expectopatronum(), 600); // 找齐了：放一只守护神庆祝
+  }
+
+  // 找到咒语时顺便施一次（会跳走页面或改主题的除外）
+  const CAST_ON_FIND = new Set(['wingardiumleviosa', 'aparecium', 'scourgify', 'riddikulus', 'alohomora', 'expectopatronum', 'expelliarmus', 'reparo', 'homenumrevelio', 'finiteincantatem']);
+  document.addEventListener('click', (e) => {
+    const el = (e.target as Element).closest<HTMLElement | SVGElement>('[data-find]');
+    if (!el) return;
+    const id = (el as HTMLElement).dataset.find!;
+    const isNew = !found[id];
+    collect(id);
+    const [type, key] = id.split(':');
+    if (type === 'spell' && CAST_ON_FIND.has(key)) effects[key]();
+    else if (type === 'creature' && !isNew && key !== 'niffler') {
+      const item = HUNT.find((h) => h.id === id)!;
+      const n = huntName(item);
+      site().toast(`<b>${n.en}</b> · ${n.zh}<span>你已经找到过它了。</span>`, 2200);
+    }
+  });
+  // 右上角魔杖切换主题 = 学会 Lumos / Nox
+  window.addEventListener('wand', (e) => collect(`spell:${(e as CustomEvent).detail === 'light' ? 'lumos' : 'nox'}`));
+
+  document.querySelectorAll<HTMLElement>('[data-hunt-open]').forEach((b) =>
+    b.addEventListener('click', () => { pop.classList.remove('show'); dialog.showModal(); })
+  );
+  dialog.querySelector('[data-hunt-close]')!.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+  dialog.querySelector('[data-hunt-reset]')!.addEventListener('click', () => {
+    if (!confirm('Obliviate：真的要忘掉所有找到的咒语和神奇生物吗？')) return;
+    found = {};
+    save();
+    render();
+  });
+  // 首页“给我一条线索”
+  document.querySelectorAll<HTMLElement>('[data-hunt-clue]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const left = HUNT.filter((h) => !found[h.id]);
+      if (!left.length) return site().toast('<b>Outstanding</b> · 优秀<span>你已经全部找齐了。城堡里没有秘密了。</span>', 3000);
+      const h = left[Math.floor(Math.random() * left.length)];
+      site().toast(`<b>线索 · A clue</b><span>${h.hint}</span>`, 6000);
+    })
+  );
+  render();
+
+  // 打字施咒：只看字母，不管空格和大小写
+  let buffer = '';
+  const keys = Object.keys(effects);
+  document.addEventListener('keydown', (e) => {
+    const t = e.target as HTMLElement;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.metaKey || e.ctrlKey || e.altKey || !/^[a-z]$/i.test(e.key)) return;
+    buffer = (buffer + e.key.toLowerCase()).slice(-40);
+    const hit = keys.find((k) => buffer.endsWith(k));
+    if (hit) { buffer = ''; cast(hit); collect(`spell:${hit}`); } // 凭记忆念出来的咒语，也算学会了
+  });
+  // 点按钮施咒（咒语书页面，手机上也能用）
+  document.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-cast]');
+    if (b) cast(b.dataset.cast!);
+  });
+</script>

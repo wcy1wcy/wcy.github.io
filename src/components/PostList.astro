@@ -1,0 +1,22 @@
+---
+import { fmtDateShort } from '../lib/format';
+interface Item { href: string; title: string; date: Date; description?: string; kind?: 'life' | 'rants' }
+interface Props { items: Item[]; showKind?: boolean }
+const { items, showKind = false } = Astro.props;
+---
+<ul class="post-list">
+  {items.map((p) => (
+    <li>
+      <a href={p.href}>
+        <time datetime={p.date.toISOString()}>{fmtDateShort(p.date)}</time>
+        <span>
+          {showKind && p.kind && (
+            <span class:list={['k', { howler: p.kind === 'rants' }]}>{p.kind === 'life' ? 'Life' : 'Howler'}</span>
+          )}
+          <span class="t">{p.title}</span>
+          {p.description && <span class="d">{p.description}</span>}
+        </span>
+      </a>
+    </li>
+  ))}
+</ul>

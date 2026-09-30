@@ -1,0 +1,17 @@
+---
+// 横向条形排行。数字用正文颜色，条只负责长短。
+import { fmtNum } from '../lib/stats';
+interface Props { items: { label: string; count: number; href?: string }[]; unit?: string }
+const { items, unit = 'visitors' } = Astro.props;
+const max = Math.max(1, ...items.map((i) => i.count));
+const total = items.reduce((s, i) => s + i.count, 0) || 1;
+---
+<ol class="bars">
+  {items.map((i) => (
+    <li title={`${i.label}: ${fmtNum(i.count)} ${unit}`}>
+      <span class="bar-label">{i.href ? <a href={i.href}>{i.label}</a> : i.label}</span>
+      <span class="bar-value">{fmtNum(i.count)}<small>{Math.round((i.count / total) * 100)}%</small></span>
+      <span class="bar-track" aria-hidden="true"><span class="bar-fill" style={`width:${Math.max(1.5, (i.count / max) * 100)}%`} /></span>
+    </li>
+  ))}
+</ol>

@@ -1,0 +1,23 @@
+---
+// 总访问量。设置了 GoatCounter 就实时读取，否则显示 stats.json 里的数字。
+import { SITE } from '../config';
+import { STATS, fmtNum } from '../lib/stats';
+const code = SITE.goatcounter;
+---
+<span class="visit-count" data-visit-count data-gc={code || undefined}>{fmtNum(STATS.total)}</span>
+{code && (
+  <script is:inline define:vars={{ code }}>
+    document.addEventListener('DOMContentLoaded', function () {
+      var els = document.querySelectorAll('[data-visit-count]');
+      if (!els.length || window.__gcCount) return;
+      window.__gcCount = fetch('https://' + code + '.goatcounter.com/counter/TOTAL.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var n = j && parseInt(String(j.count).replace(/\D/g, ''), 10);
+          if (!n && n !== 0) return;
+          els.forEach(function (el) { el.textContent = n.toLocaleString('en-US'); el.dataset.live = '1'; });
+        })
+        .catch(function () {});
+    });
+  </script>
+)}

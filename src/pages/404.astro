@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import Serpent from '../components/Serpent.astro';
+import Creature from '../components/Creature.astro';
+import Find from '../components/Find.astro';
+---
+<Base title="Obliviate">
+  <section class="oblivion">
+    <span class="eyebrow">404 · Page not found</span>
+    <div class="peeves" title="Peeves · 皮皮鬼"><Creature kind="ghost" size={64} /></div>
+    <h1 data-find="spell:obliviate" title="Obliviate · 一忘皆空">Obliviate.</h1>
+    <p>这个页面已经被施了遗忘咒——又或者，它从来就不存在。</p>
+    <p style="font-size:.92rem;color:var(--ink-3)">This page has been charmed out of existence. Or it was never here.</p>
+    <p class="peeves-note"><b>Peeves</b> · 皮皮鬼 刚才从这里飘过去，笑得很可疑。<br />试试打出 <code>accio</code>（飞来），随便召唤一篇文章回来。</p>
+    <p class="broken-link"><Find id="spell:reparo" icon="broken" label="A broken link · 一个断掉的链接" size={34} /><span>一个断掉的链接</span></p>
+    <Serpent />
+    <a class="btn" href="/">Back to Platform 9¾ →</a>
+  </section>
+</Base>

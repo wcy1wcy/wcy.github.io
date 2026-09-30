@@ -1,0 +1,114 @@
+---
+// 活点地图。完整版要先“庄严宣誓”才会展开，展开后访客脚印开始走动。
+// mini 版放在首页：只有着色的地图，点一下进入活点地图页。
+import { buildMap, MAP_W, MAP_H, fmtNum } from '../lib/stats';
+interface Props { mini?: boolean }
+const { mini = false } = Astro.props;
+const { land, footprints, legend } = buildMap();
+---
+{mini ? (
+  <a class="map-mini" href="/map/" aria-label="Open the Marauder's Map">
+    <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">
+      {land.map((c) => <path d={c.d} class={`lv lv${c.level}`} />)}
+    </svg>
+  </a>
+) : (
+  <div class="marauder" data-marauder>
+    <div class="marauder-sheet">
+      <svg class="marauder-map" viewBox={`0 0 ${MAP_W} ${MAP_H}`} role="img" aria-labelledby="map-title">
+        <title id="map-title">World map of visitors, shaded by number of visitors per country or region</title>
+        <g class="land">
+          {land.map((c) => (
+            <path d={c.d} class={`lv lv${c.level}`} data-name={c.name} data-count={c.count} tabindex={c.count ? 0 : undefined} />
+          ))}
+        </g>
+        <g class="steps">
+          {footprints.map((f) => (
+            <g class="trail" transform={`translate(${f.x} ${f.y})`} style={`--d:${f.delay}s`} data-find="spell:homenumrevelio" data-name={f.name} data-count={f.count}>
+              <g transform={`rotate(${f.angle}) scale(1.45)`}>
+                {[0, 1, 2, 3].map((i) => (
+                  <g class="foot" transform={`translate(${i % 2 ? 3.2 : -3.2} ${-4 - i * 7.5})`} style={`--i:${i}`}>
+                    <ellipse rx="1.9" ry="3.1" />
+                    <circle cy="-4.4" r="1.2" />
+                  </g>
+                ))}
+              </g>
+              <circle class="hit" r="11" />
+              {f.label && (
+                <g class="tag" transform={`translate(${f.label.dx} ${f.label.dy})`}>
+                  <text text-anchor={f.label.anchor}>{f.name}</text>
+                </g>
+              )}
+            </g>
+          ))}
+        </g>
+      </svg>
+      <div class="map-tip" role="status" aria-live="polite" hidden></div>
+    </div>
+
+    <div class="marauder-cover">
+      <p class="oath">I solemnly swear that I am up to no good.</p>
+      <p class="oath-zh">我庄严宣誓我不干好事。</p>
+      <button class="btn" type="button" data-oath data-find="spell:isolemnlyswearthatiamuptonogood">展开地图 · Reveal the map</button>
+    </div>
+
+    <div class="marauder-foot">
+      <ul class="map-legend" aria-label="Legend: visitors per country or region">
+        <li><i class="lv lv0" />0</li>
+        {legend.map((l) => <li><i class={`lv lv${l.level}`} />{l.from === l.to ? fmtNum(l.from) : `${fmtNum(l.from)}–${fmtNum(l.to)}`}</li>)}
+      </ul>
+      <button class="btn-sm" type="button" data-managed data-find="spell:mischiefmanaged" hidden>Mischief managed · 恶作剧完毕</button>
+    </div>
+  </div>
+)}
+
+{!mini && (
+  <script>
+    document.querySelectorAll<HTMLElement>('[data-marauder]').forEach((root) => {
+      const oath = root.querySelector<HTMLButtonElement>('[data-oath]')!;
+      const managed = root.querySelector<HTMLButtonElement>('[data-managed]')!;
+      const tip = root.querySelector<HTMLElement>('.map-tip')!;
+      const sheet = root.querySelector<HTMLElement>('.marauder-sheet')!;
+
+      const setOpen = (open: boolean) => {
+        root.classList.toggle('open', open);
+        managed.hidden = !open;
+        if (!open) tip.hidden = true;
+        (open ? managed : oath).focus({ preventScroll: true });
+      };
+      oath.addEventListener('click', () => setOpen(true));
+      // 网址后面加 #reveal，打开页面时直接展开地图
+      if (location.hash === '#reveal') {
+        root.classList.add('open');
+        managed.hidden = false;
+      }
+      managed.addEventListener('click', () => setOpen(false));
+
+      // 悬停或点一下国家/脚印，显示访客数量
+      const show = (el: Element, x: number, y: number) => {
+        const name = el.getAttribute('data-name');
+        if (!name) return;
+        const n = Number(el.getAttribute('data-count') || 0);
+        tip.innerHTML = `<b></b><span></span>`;
+        tip.querySelector('b')!.textContent = name;
+        tip.querySelector('span')!.textContent = n ? `${n.toLocaleString('en-US')} visitors` : 'no footprints yet';
+        const r = sheet.getBoundingClientRect();
+        tip.hidden = false;
+        const w = tip.offsetWidth;
+        tip.style.left = Math.min(Math.max(8, x - r.left - w / 2), r.width - w - 8) + 'px';
+        tip.style.top = Math.max(8, y - r.top - tip.offsetHeight - 14) + 'px';
+      };
+      sheet.addEventListener('pointermove', (e) => {
+        if (!root.classList.contains('open')) return;
+        const el = (e.target as Element).closest('[data-name]');
+        el ? show(el, e.clientX, e.clientY) : (tip.hidden = true);
+      });
+      sheet.addEventListener('pointerleave', () => (tip.hidden = true));
+      sheet.addEventListener('focusin', (e) => {
+        const el = e.target as Element;
+        const b = el.getBoundingClientRect();
+        show(el, b.left + b.width / 2, b.top + b.height / 2);
+      });
+    });
+  </script>
+)}

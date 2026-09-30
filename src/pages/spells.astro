@@ -1,0 +1,112 @@
+---
+import Base from '../layouts/Base.astro';
+import Creature from '../components/Creature.astro';
+import { SPELLS, PASSWORDS, GHOSTS, CREATURES, PLACES, HUNT } from '../data/magic';
+const hint = (id: string) => HUNT.find((h) => h.id === id)?.hint ?? '';
+---
+<Base title="Spellbook" description="The Standard Book of Spells: every spell this site answers to, and the ghosts and creatures that live here." wide decor>
+  <header class="page-head section-mast">
+    <span class="eyebrow">Spellbook · 咒语书 — <em>The Standard Book of Spells</em></span>
+    <h1 class="page-title">The Standard Book of Spells<span class="zh">标准咒语</span></h1>
+    <p class="page-lede">
+      这本书被皮皮鬼撕碎了。你每在网站里找回一条咒语或一只神奇生物，它就会在这里重新显形；
+      没找回的只剩一句线索。玩法见<a href="/#hunt">首页的号外</a>。
+      学会的咒语，可以在任何页面直接打出来施放，也可以点“施咒”按钮。
+    </p>
+    <div class="book-progress">
+      <span>已找回 <b data-hunt-count>0</b> / {HUNT.length}</span>
+      <span class="pb-track" aria-hidden="true"><span class="pb-fill" data-hunt-bar /></span>
+      <span>O.W.L. <b data-hunt-grade>Troll · 巨怪</b></span>
+      <button class="btn-sm" type="button" data-hunt-open>收集册</button>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-head"><h2>Spells<span class="zh">咒语</span></h2><span class="head-note">{SPELLS.length} incantations</span></div>
+    <ul class="spell-grid">
+      {SPELLS.map((s) => (
+        <li class="spell-card huntable" data-hunt-item={`spell:${s.key}`}>
+          <span class="locked-view"><span class="spell-words">? ? ?</span><p>线索：{hint(`spell:${s.key}`)}</p></span>
+          <span class="spell-kind">{s.kind}</span>
+          <span class="spell-words">{s.words}</span>
+          <span class="spell-zh">{s.zh}</span>
+          <p>{s.effect}</p>
+          <button class="btn-sm spell-cast" type="button" data-cast={s.key}>施咒 · Cast</button>
+        </li>
+      ))}
+    </ul>
+    <div class="passwords">
+      <h3>The Marauders’ passwords<span class="zh">活点地图口令</span></h3>
+      <ul>
+        {PASSWORDS.map((p) => (
+          <li class="huntable" data-hunt-item={`spell:${p.key}`}>
+            <span class="locked-view"><span class="spell-words">“? ? ?”</span><span class="pw-effect">线索：{hint(`spell:${p.key}`)}</span></span>
+            <span class="spell-words">“{p.words}.”</span>
+            <span class="spell-zh">“{p.zh}。”</span>
+            <span class="pw-effect">{p.effect}</span>
+            <button class="btn-sm" type="button" data-cast={p.key}>念出来</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Ghosts<span class="zh">城堡里的幽灵</span></h2>
+      <span class="head-note">念 <em>Homenum Revelio</em> 可以叫出一位</span>
+    </div>
+    <ul class="being-grid">
+      {GHOSTS.map((g) => (
+        <li class="being">
+          <Creature kind="ghost" size={40} />
+          <div>
+            <b>{g.name}</b><span class="zh">{g.zh}</span>
+            <small>{g.house}</small>
+            <p>{g.line}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>Creatures<span class="zh">神奇生物</span></h2><span class="head-note">sightings on this site</span></div>
+    <ul class="being-grid">
+      {CREATURES.map((c) => (
+        <li class:list={['being', 'huntable', `being-${c.key}`]} data-hunt-item={`creature:${c.key}`}>
+          <Creature kind={c.key as any} size={40} />
+          <div class="locked-view"><b>? ? ?</b><p>线索：{hint(`creature:${c.key}`)}</p></div>
+          <div class="found-view">
+            <b>{c.name}</b><span class="zh">{c.zh}</span>
+            <small>出没地点：{c.href ? <a href={c.href}>{c.where}</a> : c.where}</small>
+            <p>{c.note}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>Places<span class="zh">城堡里的地方</span></h2></div>
+    <ul class="places">
+      {PLACES.map((p) => (
+        <li>
+          {p.href ? <a href={p.href}>{p.name}</a> : <span class="pn">{p.name}</span>}
+          <span class="zh">{p.zh}</span>
+          <span class="what">{p.what}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- 小游戏：“最后一页”藏着咒立停 -->
+  <p class="the-end">
+    <button class="find-word" type="button" data-find="spell:finiteincantatem" title="Finite · 全书完">— Finis · 全书完 —</button>
+  </p>
+
+  <p class="fineprint">
+    咒语和人物名称来自《哈利·波特》系列，中文采用人民文学出版社译名。插图和效果都是这个网站原创的小玩笑。
+    <span class="invisible-ink">隐形墨水：这本书的最后一页，其实什么也没写。</span>
+  </p>
+</Base>
